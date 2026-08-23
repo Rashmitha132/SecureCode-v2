@@ -39,7 +39,7 @@ function riskLevelFromScore(score) {
   return "None";
 }
 
-function buildRiskReport({ patternFindings = [], llmFindings = [], depFindings = [] }) {
+function buildRiskReport({ patternFindings = [], llmFindings = [], depFindings = [], gnnFindings = [] }) {
   const normalized = [
     ...patternFindings.map((f) => ({
       ...f,
@@ -48,6 +48,11 @@ function buildRiskReport({ patternFindings = [], llmFindings = [], depFindings =
     })),
     ...llmFindings,
     ...depFindings,
+    ...gnnFindings.map((f) => ({
+      ...f,
+      category: f.category || "Logic Errors",
+      confidence: f.confidence ?? 0.82,
+    })),
   ].map((f) => ({ ...f, severity: normalizeSeverity(f.severity) }));
 
   const deduped = dedupe(normalized);

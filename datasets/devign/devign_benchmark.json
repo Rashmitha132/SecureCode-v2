@@ -1,0 +1,16 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "c1f725",
+    "target": 1,
+    "func": "int vulnerable_buffer_copy(char *src, int len) {\n    char dest[64];\n    if (len > 0) {\n        strcpy(dest, src);\n    }\n    return 0;\n}",
+    "flaw": "Buffer Overflow"
+  },
+  {
+    "project": "QEMU",
+    "commit_id": "a93e11",
+    "target": 0,
+    "func": "int safe_buffer_copy(char *src, int len) {\n    char dest[64];\n    if (len > 0 && len < 64) {\n        strncpy(dest, src, sizeof(dest) - 1);\n        dest[sizeof(dest) - 1] = '\\0';\n    }\n    return 0;\n}",
+    "flaw": "Clean"
+  }
+]

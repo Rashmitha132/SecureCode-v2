@@ -10,7 +10,7 @@
 // Get a free API key (no credit card) at https://console.groq.com/
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL = "llama-3.3-70b-versatile";
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 
 const SYSTEM_PROMPT = `You are a senior application security engineer performing a code review.
 Analyze the code the user provides and identify REAL, concrete security issues only in these categories:
@@ -29,7 +29,9 @@ Respond with ONLY a raw JSON array (no markdown fences, no prose before or after
   "category": "Injection" | "Broken Authentication" | "Access Control" | "Insecure Configuration" | "Logic Error",
   "type": "short human-readable name of the specific issue",
   "severity": "Critical" | "High" | "Medium" | "Low",
-  "line": <best-guess line number as an integer, or null if not localizable>,
+  "line": <exact integer line number where the faulty code resides in the provided code>,
+  "vulnerableCode": "<THE EXACT FAULTY LINE OR 1-3 LINES OF CODE AT THIS LINE NUMBER IN USER'S INPUT>",
+  "correctedCode": "<THE EXACT SECURE REPLACEMENT CODE FOR THAT LINE OR FUNCTION>",
   "explanation": "1-2 plain-English sentences on why this is exploitable and what the impact is",
   "fix": "1-2 sentences on how to fix it, concrete enough for a developer to act on",
   "confidence": <float between 0 and 1, how sure you are this is a genuine, exploitable issue>

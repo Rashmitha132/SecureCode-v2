@@ -20,15 +20,22 @@ const PATTERNS = [
 
 function scanPatterns(code) {
   const findings = [];
+  const lines = code.split("\n");
   for (const p of PATTERNS) {
     const matches = [...code.matchAll(p.regex)];
     for (const m of matches) {
       const lineNumber = code.slice(0, m.index).split("\n").length;
+      const originalLine = lines[lineNumber - 1] || m[0];
+      const safeLine = originalLine.replace(m[0], 'process.env.SECRET_KEY || os.environ.get("SECRET_KEY")');
+
       findings.push({
         type: p.name,
         severity: p.severity,
         line: lineNumber,
         matchPreview: maskSecret(m[0]),
+        vulnerableCode: originalLine.trim(),
+        correctedCode: safeLine.trim(),
+        fix: `Extract hardcoded ${p.name} into environment variables (.env) or secret manager.`,
         method: "pattern",
       });
     }
@@ -51,6 +58,7 @@ function shannonEntropy(str) {
 
 function scanEntropy(code, { minLength = 20, entropyThreshold = 4.0 } = {}) {
   const findings = [];
+  const lines = code.split("\n");
   const stringLiteralRegex = /["']([A-Za-z0-9+/=_\-!@#$%^&*]{20,})["']/g;
   const matches = [...code.matchAll(stringLiteralRegex)];
 
@@ -61,11 +69,17 @@ function scanEntropy(code, { minLength = 20, entropyThreshold = 4.0 } = {}) {
     const entropy = shannonEntropy(candidate);
     if (entropy >= entropyThreshold) {
       const lineNumber = code.slice(0, m.index).split("\n").length;
+      const originalLine = lines[lineNumber - 1] || candidate;
+      const safeLine = originalLine.replace(candidate, 'os.environ.get("API_SECRET")');
+
       findings.push({
         type: "High-entropy string (possible secret)",
         severity: entropy >= 4.5 ? "Medium" : "Low",
         line: lineNumber,
         matchPreview: maskSecret(candidate),
+        vulnerableCode: originalLine.trim(),
+        correctedCode: safeLine.trim(),
+        fix: "Remove high-entropy plaintext string and inject via environment variables.",
         entropy: entropy.toFixed(2),
         method: "entropy",
       });

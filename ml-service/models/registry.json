@@ -1,0 +1,23 @@
+{
+  "active_version": 2,
+  "versions": [
+    {
+      "version": 1,
+      "accuracy": 0.842,
+      "f1_score": 0.817,
+      "trained_on": 1250,
+      "path": "gnn_v1.pt",
+      "created_at": "2026-08-22T09:33:27.766175",
+      "notes": "Baseline hybrid model (Devign + Synthetic Python ASTs)"
+    },
+    {
+      "version": 2,
+      "accuracy": 0.88,
+      "f1_score": 0.8929,
+      "trained_on": 200,
+      "path": "gnn_v2.pt",
+      "created_at": "2026-08-22T09:34:32.599557",
+      "notes": "Trained on 200 AST graphs across 7 vulnerability classes"
+    }
+  ]
+}
