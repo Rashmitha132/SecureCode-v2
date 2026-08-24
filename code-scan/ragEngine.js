@@ -518,10 +518,38 @@ async function askSecurityCopilot({
   if (isGenCodeQuery && !isIdentityQuery(cleanQuery)) {
     return {
       answer: "💡 **I cannot generate new code directly in this Copilot chat.**\n\nPlease go to the **Generate Code** tab in the sidebar where you can ask for any code or feature. After generating it, you can click **'Analyze in Code Scan'** to run the AST-GNN security audit. Then, you can come back here and ask me to **inspect the findings or explain how to fix any vulnerable code present**!",
+  }
+
+  // 1c. Fix & Remediation Request Inquiry (e.g. "how to fix this", "how to patch")
+  const isFixQuery =
+    /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(cleanQuery) ||
+    /how to fix|how to patch|how can i fix|fix this|patch this|how do i fix|fix it/i.test(cleanQuery);
+
+  if (isFixQuery) {
+    const findingsCount = Array.isArray(scanFindings) ? scanFindings.length : 0;
+    if (findingsCount === 0) {
+      return {
+        answer: "✨ **You don't need to worry about it! Your code is already fixed and clean.**\n\nYour latest scan shows **0 vulnerabilities** and a **100/100 Security Score**. No further remediation is needed for this snippet.",
+        citations: [
+          { id: "CLEAN-STATUS", title: "Scan Audit Status", owasp: "Zero Vulnerabilities", severity: "Info" }
+        ],
+        suggestedActions: ["Scan New Code", "Generate Code", "View Scan History"]
+      };
+    }
+
+    const firstFinding = scanFindings[0] || {};
+    const fType = firstFinding.type || firstFinding.category || "Security Vulnerability";
+    const fLine = firstFinding.line || 1;
+    const fFix = firstFinding.fix || "Use parameterized queries or environment variables.";
+    const fCorrected = firstFinding.correctedCode || 'cursor.execute("SELECT * FROM users WHERE user = %s", (username,))';
+
+    return {
+      answer: `🛠️ **How to Fix the Vulnerabilities in Your Recent Scan:**\n\nYour recent scan has **${findingsCount} issue${findingsCount !== 1 ? 's' : ''}** (including **${fType}** at Line ${fLine}).\n\n### ⚡ Step-by-Step Remediation in SecureCode:\n1. Navigate to the **Scan Results** page in the left sidebar.\n2. Locate the finding card for **${fType}** (Line ${fLine}).\n3. Click **"⚡ Apply Fix to Code"** (or click **"⚡ Fix All"** at the top) to automatically replace the vulnerable line with verified secure code and see the update in **Code Scan**.\n4. Alternatively, click **"Auto-Repair"** to generate an automatic refactored patch diff.\n\n### 📝 Recommended Secure Replacement:\n\`\`\`python\n${fCorrected}\n\`\`\`\n> **Remediation Note:** ${fFix}`,
       citations: [
-        { id: "GEN-GUIDE", title: "Secure Code Synthesizer", owasp: "Feature Guidance", severity: "Info" }
+        { id: "SCAN-REPAIR", title: "Scan Results Remediation", owasp: fType, severity: "High" },
+        { id: "OWASP-PATCH", title: "OWASP Security Standard", owasp: "Automated Patching", severity: "Info" }
       ],
-      suggestedActions: ["Go to Generate Code", "Audit My Scan Findings", "Review My Scanned Code"]
+      suggestedActions: ["Apply Fix to Code", "Go to Scan Results", "Auto-Repair"]
     };
   }
 

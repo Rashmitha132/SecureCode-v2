@@ -480,7 +480,61 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 4. Secret & API Key Inquiries
+    // 5. Fix & Patch Request ("how to fix this", "how to patch", "how can i fix", "fix it")
+    const isFixQuery =
+      /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(qLower) ||
+      qLower.includes('how to fix') ||
+      qLower.includes('how to patch') ||
+      qLower.includes('how can i fix') ||
+      qLower.includes('fix this') ||
+      qLower.includes('patch this') ||
+      qLower.includes('how do i fix') ||
+      qLower.includes('fix it') ||
+      qLower.includes('fix the') ||
+      qLower.includes('remediate');
+
+    if (isFixQuery) {
+      const scanFindingsList = recentScan?.findings || results?.findings || activeFindings;
+      const findingsCount = recentScan ? (recentScan.total_findings ?? scanFindingsList.length) : scanFindingsList.length;
+
+      // Case B: Already clean / already fixed
+      if (findingsCount === 0) {
+        return {
+          answer: "✨ **You don't need to worry about it! Your code is already fixed and clean.**\n\nYour latest scan shows **0 vulnerabilities** and a **100/100 Security Score**. No further remediation is needed for this snippet.",
+          citations: [
+            { id: 'CLEAN-STATUS', title: 'Scan Audit Status', owasp: 'Zero Vulnerabilities', severity: 'Info' }
+          ]
+        };
+      }
+
+      // Case A: Unfixed vulnerabilities present in recent scan
+      const firstFinding = scanFindingsList[0] || {};
+      const fType = firstFinding.type || firstFinding.category || 'Security Vulnerability';
+      const fLine = firstFinding.line || 1;
+      const fFix = firstFinding.fix || 'Use parameterized queries or environment variables.';
+      const fCorrected = firstFinding.correctedCode || 'cursor.execute("SELECT * FROM users WHERE user = %s", (username,))';
+
+      let fixResponse = `🛠️ **How to Fix the Vulnerabilities in Your Recent Scan:**\n\n`;
+      fixResponse += `Your recent scan has **${findingsCount} issue${findingsCount !== 1 ? 's' : ''}** (including **${fType}** at Line ${fLine}).\n\n`;
+      fixResponse += `### ⚡ Step-by-Step Remediation in SecureCode:\n`;
+      fixResponse += `1. Navigate to the **Scan Results** page in the left sidebar.\n`;
+      fixResponse += `2. Locate the finding card for **${fType}** (Line ${fLine}).\n`;
+      fixResponse += `3. Click **"⚡ Apply Fix to Code"** (or click **"⚡ Fix All"** at the top) to automatically replace the vulnerable line with verified secure code and see the update in **Code Scan**.\n`;
+      fixResponse += `4. Alternatively, click **"Auto-Repair"** to generate an automatic refactored patch diff.\n\n`;
+      fixResponse += `### 📝 Recommended Secure Replacement:\n`;
+      fixResponse += `\`\`\`python\n${fCorrected}\n\`\`\`\n`;
+      fixResponse += `> **Remediation Note:** ${fFix}`;
+
+      return {
+        answer: fixResponse,
+        citations: [
+          { id: 'SCAN-REPAIR', title: 'Scan Results Remediation', owasp: fType, severity: 'High' },
+          { id: 'OWASP-PATCH', title: 'OWASP Security Standard', owasp: 'Automated Patching', severity: 'Info' }
+        ]
+      };
+    }
+
+    // 6. Secret & API Key Inquiries
     if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
       const secretFindings = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.method === 'entropy');
       if (secretFindings.length > 0) {
@@ -500,7 +554,7 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 5. SQL Injection & Injection Inquiries
+    // 7. SQL Injection & Injection Inquiries
     if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('xss') || qLower.includes('sqli')) {
       return {
         answer: `🛡️ **OWASP A03:2021 — Injection Remediation Guide**\n\nInjection flaws occur when untrusted user input is directly concatenated into database queries or execution commands.\n\n### ❌ Insecure Pattern (Vulnerable):\n\`\`\`python\nquery = "SELECT * FROM users WHERE user = '" + username + "'"\ncursor.execute(query)\n\`\`\`\n\n### ✅ Secure Remediated Pattern (Parameterized):\n\`\`\`python\nquery = "SELECT * FROM users WHERE user = %s"\ncursor.execute(query, (username,))\n\`\`\`\n\n**Best Practice:** Always use parameterized placeholders or an ORM like SQLAlchemy / Prisma.`,
