@@ -38,10 +38,7 @@ const API_URL = 'http://localhost:4000';
 const NAV_GROUPS = [
   {
     label: 'Overview',
-    items: [
-      { label: 'Landing Page', icon: Sparkles },
-      { label: 'Dashboard', icon: Home },
-    ],
+    items: [{ label: 'Dashboard', icon: Home }],
   },
   {
     label: 'Scan',
@@ -3301,17 +3298,25 @@ export default function App() {
     return null;
   }
 
+  if (activeNav === 'Landing Page') {
+    return (
+      <div className={`landing-fullscreen-wrap ${theme === 'light' ? 'theme-light' : ''}`} style={{ width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg)' }}>
+        <LandingPageView goToNav={goToNav} theme={theme} setTheme={setTheme} />
+      </div>
+    );
+  }
+
   return (
     <div className={`app ${theme === 'light' ? 'theme-light' : ''}`}>
       {sidebarOpen && <div className="backdrop" onClick={() => setSidebarOpen(false)} />}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="brand">
+        <div className="brand" style={{ cursor: 'pointer' }} onClick={() => goToNav('Landing Page')} title="Back to Landing Page">
           <div className="brand-icon"><ShieldCheck size={20} /></div>
           <div>
             <div className="brand-name">SecureCode</div>
             <div className="brand-tag">Generate & Audit Secure Code</div>
           </div>
-          <button className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
+          <button className="sidebar-close" onClick={(e) => { e.stopPropagation(); setSidebarOpen(false); }} aria-label="Close menu">
             <X size={18} />
           </button>
         </div>
@@ -3364,6 +3369,9 @@ export default function App() {
             </div>
           </div>
           <div className="topbar-actions">
+            <button className="ghost-btn" onClick={() => goToNav('Landing Page')}>
+              <Sparkles size={16} /> Home
+            </button>
             <button className="ghost-btn" onClick={() => goToNav('How It Works')}>
               <HelpCircle size={16} /> How it works
             </button>

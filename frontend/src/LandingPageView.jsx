@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck, Zap, KeyRound, Brain, Sparkles, CheckCircle2,
   AlertTriangle, ArrowRight, Check, Bug, Lock, Server, Cpu,
-  RefreshCw, Terminal, ChevronDown, ExternalLink, Activity, Code2
+  RefreshCw, Terminal, ChevronDown, ExternalLink, Activity, Code2,
+  Sun, Moon, Menu, X
 } from 'lucide-react';
 
 const SAMPLES = {
@@ -80,10 +81,12 @@ const SAMPLES = {
   }
 };
 
-export default function LandingPageView({ goToNav }) {
+export default function LandingPageView({ goToNav, theme, setTheme }) {
   const [sampleKey, setSampleKey] = useState('sqli');
   const [patchApplied, setPatchApplied] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeFaq, setActiveFaq] = useState(0);
   const canvasRef = useRef(null);
 
   const currentSample = SAMPLES[sampleKey] || SAMPLES.sqli;
@@ -93,13 +96,13 @@ export default function LandingPageView({ goToNav }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
-    let width = canvas.width = canvas.offsetWidth;
-    let height = canvas.height = canvas.offsetHeight;
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     };
     window.addEventListener('resize', handleResize);
 
@@ -113,7 +116,7 @@ export default function LandingPageView({ goToNav }) {
         vx: (Math.random() - 0.5) * 0.35,
         vy: (Math.random() - 0.5) * 0.35,
         radius: Math.random() * 2 + 1,
-        color: Math.random() > 0.5 ? 'rgba(59, 167, 240, 0.6)' : 'rgba(217, 79, 192, 0.6)'
+        color: Math.random() > 0.5 ? 'rgba(59, 167, 240, 0.55)' : 'rgba(217, 79, 192, 0.55)'
       });
     }
 
@@ -175,36 +178,175 @@ export default function LandingPageView({ goToNav }) {
     }, 350);
   };
 
+  const scrollToSection = (id) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div style={{
-      width: '100%',
-      minHeight: '100%',
-      color: 'inherit',
+      width: '100vw',
+      minHeight: '100vh',
+      background: 'var(--bg)',
+      color: 'var(--text)',
       fontFamily: "'Inter', system-ui, sans-serif",
       position: 'relative',
       overflowX: 'hidden',
-      paddingBottom: '80px'
+      paddingBottom: '60px'
     }}>
       {/* Background canvas */}
       <canvas
         ref={canvasRef}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '600px',
+          width: '100vw',
+          height: '100vh',
           pointerEvents: 'none',
           zIndex: 0,
-          opacity: 0.4
+          opacity: 0.45
         }}
       />
 
-      {/* Hero Section */}
-      <div style={{
+      {/* FULL STANDALONE MARKETING NAVBAR */}
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '70px',
+        background: 'var(--panel)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid var(--border)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.06)'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '1240px',
+          margin: '0 auto',
+          padding: '0 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          {/* Brand Logo */}
+          <div
+            onClick={() => scrollToSection('hero-top')}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          >
+            <div style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(59, 167, 240, 0.2), rgba(124, 110, 232, 0.2))',
+              border: '1px solid rgba(59, 167, 240, 0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3ba7f0'
+            }}>
+              <ShieldCheck size={20} />
+            </div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              SecureCode <span style={{
+                fontSize: '0.65rem', fontWeight: 700,
+                background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 50%, #d94fc0 100%)',
+                color: '#fff', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase'
+              }}>v2.4</span>
+            </div>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <nav className="hide-on-mobile" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <button onClick={() => scrollToSection('hybrid-engine')} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}>4-Tier Detection</button>
+            <button onClick={() => scrollToSection('playground-section')} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}>Interactive Scanner</button>
+            <button onClick={() => scrollToSection('self-learning-section')} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}>Self-Learning</button>
+            <button onClick={() => scrollToSection('features-section')} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}>DevSecOps Suite</button>
+            <button onClick={() => scrollToSection('faq-section')} style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: 500, cursor: 'pointer' }}>FAQ</button>
+          </nav>
+
+          {/* Nav Right Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              style={{
+                width: '38px', height: '38px', borderRadius: '8px',
+                background: 'var(--panel-2)', border: '1px solid var(--border)',
+                color: 'var(--text-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+              title="Toggle Light / Dark Theme"
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {/* Launch App Button */}
+            <button
+              onClick={() => goToNav('Code Scan')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '8px 18px', borderRadius: '8px',
+                background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
+                color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.88rem',
+                cursor: 'pointer', boxShadow: '0 4px 14px rgba(59, 167, 240, 0.35)'
+              }}
+            >
+              <Zap size={15} />
+              <span>Launch Live App</span>
+            </button>
+
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="show-on-mobile"
+              style={{
+                width: '38px', height: '38px', borderRadius: '8px',
+                background: 'var(--panel-2)', border: '1px solid var(--border)',
+                color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* MOBILE SLIDE-DOWN DRAWER */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'fixed', top: '70px', left: 0, width: '100%',
+          background: 'var(--panel)', borderBottom: '1px solid var(--border)',
+          padding: '20px', zIndex: 99, display: 'flex', flexDirection: 'column', gap: '14px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+        }}>
+          <button onClick={() => scrollToSection('hybrid-engine')} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: '1rem', fontWeight: 600, textAlign: 'left', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>4-Tier Detection</button>
+          <button onClick={() => scrollToSection('playground-section')} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: '1rem', fontWeight: 600, textAlign: 'left', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>Interactive Scanner</button>
+          <button onClick={() => scrollToSection('self-learning-section')} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: '1rem', fontWeight: 600, textAlign: 'left', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>Self-Learning Loop</button>
+          <button onClick={() => scrollToSection('features-section')} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: '1rem', fontWeight: 600, textAlign: 'left', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>DevSecOps Suite</button>
+          <button onClick={() => scrollToSection('faq-section')} style={{ background: 'none', border: 'none', color: 'var(--text)', fontSize: '1rem', fontWeight: 600, textAlign: 'left', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>FAQ</button>
+          <button
+            onClick={() => goToNav('Code Scan')}
+            style={{
+              padding: '12px', background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
+              color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer',
+              marginTop: '8px'
+            }}
+          >
+            ⚡ Launch Live App
+          </button>
+        </div>
+      )}
+
+      {/* HERO SECTION */}
+      <div id="hero-top" style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '30px 16px 40px',
+        padding: '50px 20px 40px',
         textAlign: 'center',
         position: 'relative',
         zIndex: 1
@@ -237,7 +379,7 @@ export default function LandingPageView({ goToNav }) {
         </div>
 
         <h1 style={{
-          fontSize: 'clamp(2rem, 5.5vw, 3.4rem)',
+          fontSize: 'clamp(2.1rem, 5.5vw, 3.6rem)',
           fontWeight: 900,
           lineHeight: 1.15,
           letterSpacing: '-1.5px',
@@ -255,10 +397,10 @@ export default function LandingPageView({ goToNav }) {
         </h1>
 
         <p style={{
-          fontSize: 'clamp(0.98rem, 2.2vw, 1.15rem)',
+          fontSize: 'clamp(1rem, 2.2vw, 1.18rem)',
           opacity: 0.85,
           maxWidth: '780px',
-          margin: '0 auto 28px',
+          margin: '0 auto 30px',
           lineHeight: 1.6
         }}>
           SecureCode v2 blends <strong>Regex Heuristics</strong>, <strong>Shannon Entropy</strong>, <strong>Groq LLaMA-3.3</strong>, and a <strong>PyTorch AST Graph Neural Network</strong> into a closed-loop system that continuously self-improves from verified fixes.
@@ -272,7 +414,7 @@ export default function LandingPageView({ goToNav }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '12px 24px',
+              padding: '12px 26px',
               background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
               color: '#fff',
               border: 'none',
@@ -293,7 +435,7 @@ export default function LandingPageView({ goToNav }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '12px 24px',
+              padding: '12px 26px',
               background: 'var(--panel)',
               border: '1px solid var(--border)',
               color: 'inherit',
@@ -336,7 +478,7 @@ export default function LandingPageView({ goToNav }) {
         </div>
 
         {/* 4-Tier Hybrid Detection Engines */}
-        <div style={{ textAlign: 'left', marginBottom: '60px' }}>
+        <div id="hybrid-engine" style={{ textAlign: 'left', marginBottom: '60px', paddingTop: '20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#3ba7f0', textTransform: 'uppercase', letterSpacing: '1px' }}>Multi-Layered Defense</span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 4vw, 2.2rem)', fontWeight: 800, marginTop: '6px' }}>4-Tier Hybrid Vulnerability Detection</h2>
@@ -393,7 +535,7 @@ export default function LandingPageView({ goToNav }) {
         </div>
 
         {/* Interactive Live Playground */}
-        <div style={{
+        <div id="playground-section" style={{
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '16px',
@@ -589,7 +731,7 @@ export default function LandingPageView({ goToNav }) {
         </div>
 
         {/* Closed Loop Self Learning Workflow */}
-        <div style={{ textAlign: 'left', marginBottom: '60px' }}>
+        <div id="self-learning-section" style={{ textAlign: 'left', marginBottom: '60px', paddingTop: '20px' }}>
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, color: '#7c6ee8', textTransform: 'uppercase', letterSpacing: '1px' }}>Continuous Improvement</span>
             <h2 style={{ fontSize: 'clamp(1.7rem, 4vw, 2.2rem)', fontWeight: 800, marginTop: '6px' }}>Closed-Loop Self-Learning Engine</h2>
@@ -631,6 +773,67 @@ export default function LandingPageView({ goToNav }) {
           </div>
         </div>
 
+        {/* DevSecOps Suite */}
+        <div id="features-section" style={{ textAlign: 'left', marginBottom: '60px', paddingTop: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#3ba7f0', textTransform: 'uppercase', letterSpacing: '1px' }}>Tooling Ecosystem</span>
+            <h2 style={{ fontSize: 'clamp(1.7rem, 4vw, 2.2rem)', fontWeight: 800, marginTop: '6px' }}>Built for Modern DevSecOps Teams</h2>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '18px'
+          }}>
+            <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>AI Security Copilot</h3>
+              <p style={{ fontSize: '0.88rem', opacity: 0.8, lineHeight: 1.55 }}>Contextual conversational assistant that explains root causes, answers CVE queries, and drafts custom mitigation rules.</p>
+            </div>
+            <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>Dependency CVE Scanner</h3>
+              <p style={{ fontSize: '0.88rem', opacity: 0.8, lineHeight: 1.55 }}>Integration with OSV.dev and national vulnerability databases to flag known vulnerabilities across package managers.</p>
+            </div>
+            <div style={{ background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '12px', padding: '24px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>IaC & Config Auditor</h3>
+              <p style={{ fontSize: '0.88rem', opacity: 0.8, lineHeight: 1.55 }}>Inspects Dockerfiles, Kubernetes manifests, and cloud configuration scripts for permissive ports and secrets.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div id="faq-section" style={{ textAlign: 'left', marginBottom: '60px', paddingTop: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#3ba7f0', textTransform: 'uppercase', letterSpacing: '1px' }}>Got Questions?</span>
+            <h2 style={{ fontSize: 'clamp(1.7rem, 4vw, 2.2rem)', fontWeight: 800, marginTop: '6px' }}>Frequently Asked Questions</h2>
+          </div>
+
+          <div style={{ maxWidth: '780px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { q: 'How does the Graph Neural Network (GNN) analyze code ASTs?', a: 'SecureCode v2 parses incoming code into an Abstract Syntax Tree (AST), extracting node features and control/data-flow edge adjacencies. A 3-layer GCN embeds these relationships into PyTorch tensors for defect classification.' },
+              { q: 'Does my proprietary code leave my local environment?', a: 'No. The Regex detector, Shannon Entropy engine, PyTorch GNN ML microservice, and MySQL feedback database execute 100% locally. The optional semantic analyzer uses your private Groq API key.' },
+              { q: 'Which programming languages are currently supported?', a: 'SecureCode v2 provides full 4-tier hybrid scanning and code generation for Python, JavaScript, TypeScript, Go, Rust, Java, C++, PHP, and Ruby.' }
+            ].map((faq, fIdx) => (
+              <div key={fIdx} style={{
+                background: 'var(--panel)', border: `1px solid ${activeFaq === fIdx ? '#3ba7f0' : 'var(--border)'}`,
+                borderRadius: '8px', overflow: 'hidden'
+              }}>
+                <div
+                  onClick={() => setActiveFaq(activeFaq === fIdx ? -1 : fIdx)}
+                  style={{ padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  <span>{faq.q}</span>
+                  <ChevronDown size={18} style={{ transform: activeFaq === fIdx ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease', color: activeFaq === fIdx ? '#3ba7f0' : 'var(--text-dim)' }} />
+                </div>
+                {activeFaq === fIdx && (
+                  <div style={{ padding: '0 20px 18px', opacity: 0.8, fontSize: '0.88rem', lineHeight: 1.6 }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Bottom CTA Card */}
         <div style={{
           background: 'var(--panel)',
@@ -641,10 +844,10 @@ export default function LandingPageView({ goToNav }) {
           boxShadow: '0 8px 24px rgba(59, 167, 240, 0.15)'
         }}>
           <h2 style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', fontWeight: 800, marginBottom: '12px' }}>
-            Ready to Analyze & Fix Code Vulnerabilities?
+            Ready to Build Self-Healing, Secure Code?
           </h2>
           <p style={{ fontSize: '1rem', opacity: 0.8, maxWidth: '600px', margin: '0 auto 28px' }}>
-            Try the live Code Scanner or test AI generation with built-in AST security guardrails.
+            Start scanning your repositories in seconds with 4-tier hybrid detection, AST Graph Neural Networks, and instant 1-click auto-repair.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
             <button
@@ -660,7 +863,7 @@ export default function LandingPageView({ goToNav }) {
                 cursor: 'pointer'
               }}
             >
-              ⚡ Go to Code Scan View
+              ⚡ Launch Code Scan
             </button>
             <button
               onClick={() => goToNav('Dashboard')}
