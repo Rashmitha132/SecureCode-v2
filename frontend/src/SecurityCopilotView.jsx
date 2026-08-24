@@ -394,18 +394,20 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 2. Identity & capabilities inquiry ("who are you", "what can you do", "introduce yourself")
-    if (
-      qLower.includes('who are you') ||
-      qLower.includes('what can you do') ||
-      qLower.includes('introduce yourself') ||
-      qLower.includes('what is your purpose') ||
+    // 2. Identity & capabilities inquiry ("who are you", "who r u", "what r u", "introduce yourself", etc.)
+    const isIdentity = 
+      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(qLower) ||
+      qLower.startsWith('who r u') ||
+      qLower.startsWith('who are u') ||
+      qLower.startsWith('who r you') ||
+      qLower.startsWith('who are you') ||
       qLower === 'hi' ||
       qLower === 'hello' ||
-      qLower === 'hey'
-    ) {
+      qLower === 'hey';
+
+    if (isIdentity) {
       return {
-        answer: "👋 Hello! I am **SecureCode Copilot**, your dedicated AI Project Security Auditor.\n\nHere is how I can assist with your project:\n* **Audit Scanned Code:** Inspect your code for vulnerabilities (SQL Injection, XSS, exposed secrets, broken auth).\n* **Explain Scan Findings:** Break down security issues and connect them to official OWASP Top 10 & CWE standards.\n* **Generate Secure Patches:** Provide tailored, copy-ready fixes to remediate vulnerabilities in your code.\n* **Explain Platform Architecture:** Share details on our custom PyTorch AST-GNN model, training datasets, and RAG pipeline.\n\nWhat would you like me to inspect in your project?",
+        answer: "👋 I am **SecureCode Copilot**, an AI security assistant created to help you audit your project, understand vulnerable code, explain security findings, and provide secure remediation patches for your codebase.\n\n### 🛡️ How I Can Help You:\n* **Inspect Vulnerable Code:** Audit your project files for security flaws like SQL Injection, XSS, insecure eval, and exposed credentials.\n* **Explain Security Findings:** Break down detected vulnerabilities with severity metrics connected to official **OWASP Top 10** and **MITRE CWE** standards.\n* **Generate Automated Fixes:** Provide verified, copy-ready code patches and 1-click remediation diffs.\n\nFeel free to paste your code in **Code Scan** or ask me to inspect your current scan findings!",
         citations: [
           { id: 'SecureCode-Core', title: 'Project Security Auditor', owasp: 'Application Defense', severity: 'Info' }
         ]

@@ -244,15 +244,14 @@ SecureCode is engineered on a multi-tiered AI architecture combining custom Grap
 * **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and 1-click AST-guided auto-remediation.
 
 ### 4. 🔄 Active Continuous Fine-Tuning Loop
-* Every verified scan and remediation feedback instance is queued for automated retraining to iteratively improve model performance over time.`,citations:[{id:`ARCH-GNN`,title:`PyTorch AST-GNN Classifier`,owasp:`Graph Neural Network`,severity:`Info`},{id:`RAG-OWASP`,title:`OWASP Top 10 & CWE Rulebooks`,owasp:`RAG Grounding`,severity:`Info`},{id:`SEC-CORE`,title:`SecureCode Core Engine`,owasp:`Production Architecture`,severity:`Info`}]};if(r.includes(`who are you`)||r.includes(`what can you do`)||r.includes(`introduce yourself`)||r.includes(`what is your purpose`)||r===`hi`||r===`hello`||r===`hey`)return{answer:`👋 Hello! I am **SecureCode Copilot**, your dedicated AI Project Security Auditor.
+* Every verified scan and remediation feedback instance is queued for automated retraining to iteratively improve model performance over time.`,citations:[{id:`ARCH-GNN`,title:`PyTorch AST-GNN Classifier`,owasp:`Graph Neural Network`,severity:`Info`},{id:`RAG-OWASP`,title:`OWASP Top 10 & CWE Rulebooks`,owasp:`RAG Grounding`,severity:`Info`},{id:`SEC-CORE`,title:`SecureCode Core Engine`,owasp:`Production Architecture`,severity:`Info`}]};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(r)||r.startsWith(`who r u`)||r.startsWith(`who are u`)||r.startsWith(`who r you`)||r.startsWith(`who are you`)||r===`hi`||r===`hello`||r===`hey`)return{answer:`👋 I am **SecureCode Copilot**, an AI security assistant created to help you audit your project, understand vulnerable code, explain security findings, and provide secure remediation patches for your codebase.
 
-Here is how I can assist with your project:
-* **Audit Scanned Code:** Inspect your code for vulnerabilities (SQL Injection, XSS, exposed secrets, broken auth).
-* **Explain Scan Findings:** Break down security issues and connect them to official OWASP Top 10 & CWE standards.
-* **Generate Secure Patches:** Provide tailored, copy-ready fixes to remediate vulnerabilities in your code.
-* **Explain Platform Architecture:** Share details on our custom PyTorch AST-GNN model, training datasets, and RAG pipeline.
+### 🛡️ How I Can Help You:
+* **Inspect Vulnerable Code:** Audit your project files for security flaws like SQL Injection, XSS, insecure eval, and exposed credentials.
+* **Explain Security Findings:** Break down detected vulnerabilities with severity metrics connected to official **OWASP Top 10** and **MITRE CWE** standards.
+* **Generate Automated Fixes:** Provide verified, copy-ready code patches and 1-click remediation diffs.
 
-What would you like me to inspect in your project?`,citations:[{id:`SecureCode-Core`,title:`Project Security Auditor`,owasp:`Application Defense`,severity:`Info`}]};if(r.includes(`recent`)||r.includes(`last scan`)||r.includes(`history`)||r.includes(`previous scan`)){if(!o)return{answer:`📋 **No Recent Scans Found**
+Feel free to paste your code in **Code Scan** or ask me to inspect your current scan findings!`,citations:[{id:`SecureCode-Core`,title:`Project Security Auditor`,owasp:`Application Defense`,severity:`Info`}]};if(r.includes(`recent`)||r.includes(`last scan`)||r.includes(`history`)||r.includes(`previous scan`)){if(!o)return{answer:`📋 **No Recent Scans Found**
 
 You haven't run any scans in this session yet. Head over to the **Code Scan** tab to paste a snippet or upload a file, and I will track all your findings right here!`,citations:[{id:`SCAN-INFO`,title:`Scan Engine`,owasp:`Active Session`,severity:`Info`}]};let e=o.findings||[],t=Math.max(0,100-(o.risk_score||o.riskScore||0)),n=o.risk_level||o.riskLevel||`Low`,r=o.total_findings??e.length,i=`📊 **Here is the summary of your most recent scan:**
 
