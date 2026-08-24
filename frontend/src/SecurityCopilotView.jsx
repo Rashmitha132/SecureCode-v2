@@ -414,20 +414,26 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 3. Code Generation Request Inquiry ("can u help me to generate code", "write code for me", etc.)
+    // 3. Code Generation Request Inquiry (e.g. "generate python code for...", "write code", "create a function", etc.)
     const isGenCodeQuery =
-      /\b(generate|create|write|synthesize|build)\s+(a\s+|an\s+|some\s+)?(code|program|function|script|app|backend|api|auth|login)\b/i.test(qLower) ||
+      (
+        /\b(generate|write|create|synthesize|build|give me|make|code me)\b/i.test(qLower) &&
+        /\b(code|python|javascript|java|c\+\+|html|css|sql|script|function|program|app|api|login|auth|calculator|adding|numbers|snippet)\b/i.test(qLower)
+      ) ||
+      qLower.startsWith('generate') ||
+      qLower.startsWith('write') ||
+      qLower.startsWith('create') ||
       qLower.includes('generate code') ||
       qLower.includes('write code') ||
       qLower.includes('create code') ||
-      qLower.includes('help me to generate code') ||
-      qLower.includes('help me generate code') ||
+      qLower.includes('can u generate') ||
       qLower.includes('can you generate') ||
-      qLower.includes('can u generate');
+      qLower.includes('help me to generate code') ||
+      qLower.includes('help me generate code');
 
-    if (isGenCodeQuery) {
+    if (isGenCodeQuery && !isBuildOrArchQuery) {
       return {
-        answer: "💡 **I cannot generate new code directly in this Copilot chat.** For creating new code from scratch, please use our **Generate Code** tab in the sidebar!\n\n### 🚀 Recommended Workflow:\n1. Go to the **Generate Code** tab to generate secure production code for any feature (JWT auth, database queries, APIs, etc.).\n2. Click **'Analyze in Code Scan'** to inspect the code with our AST-GNN security detector.\n3. Once scanned, you can return here and ask me to **inspect the findings or explain how to fix any detected vulnerabilities**!",
+        answer: "💡 **I cannot generate new code directly in this Copilot chat.**\n\nPlease go to the **Generate Code** tab in the sidebar where you can ask for any code or feature. After generating it, you can click **'Analyze in Code Scan'** to run the AST-GNN security audit. Then, you can come back here and ask me to **inspect the findings or explain how to fix any vulnerable code present**!",
         citations: [
           { id: 'GEN-GUIDE', title: 'Secure Code Synthesizer', owasp: 'Feature Guidance', severity: 'Info' }
         ]

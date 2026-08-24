@@ -489,10 +489,20 @@ async function askSecurityCopilot({
     };
   }
 
-  // 1b. Code Generation Request Inquiry
-  if (/\b(generate|create|write|synthesize|build)\s+(a\s+|an\s+|some\s+)?(code|program|function|script|app|backend|api|auth|login)\b/i.test(cleanQuery) || /generate code|write code|create code/i.test(cleanQuery)) {
+  // 1b. Code Generation Request Inquiry (e.g. "generate python code for...", "write code", etc.)
+  const isGenCodeQuery =
+    (
+      /\b(generate|write|create|synthesize|build|give me|make|code me)\b/i.test(cleanQuery) &&
+      /\b(code|python|javascript|java|c\+\+|html|css|sql|script|function|program|app|api|login|auth|calculator|adding|numbers|snippet)\b/i.test(cleanQuery)
+    ) ||
+    cleanQuery.toLowerCase().startsWith('generate') ||
+    cleanQuery.toLowerCase().startsWith('write') ||
+    cleanQuery.toLowerCase().startsWith('create') ||
+    /generate code|write code|create code/i.test(cleanQuery);
+
+  if (isGenCodeQuery && !isIdentityQuery(cleanQuery)) {
     return {
-      answer: "💡 **I cannot generate new code directly in this Copilot chat.** For creating new code from scratch, please use our **Generate Code** tab in the sidebar!\n\n### 🚀 Recommended Workflow:\n1. Go to the **Generate Code** tab to generate secure production code for any feature (JWT auth, database queries, APIs, etc.).\n2. Click **'Analyze in Code Scan'** to inspect the code with our AST-GNN security detector.\n3. Once scanned, you can return here and ask me to **inspect the findings or explain how to fix any detected vulnerabilities**!",
+      answer: "💡 **I cannot generate new code directly in this Copilot chat.**\n\nPlease go to the **Generate Code** tab in the sidebar where you can ask for any code or feature. After generating it, you can click **'Analyze in Code Scan'** to run the AST-GNN security audit. Then, you can come back here and ask me to **inspect the findings or explain how to fix any vulnerable code present**!",
       citations: [
         { id: "GEN-GUIDE", title: "Secure Code Synthesizer", owasp: "Feature Guidance", severity: "Info" }
       ],
