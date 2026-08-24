@@ -540,7 +540,7 @@ function ConnectRepoModal({ isOpen, onClose, onConnect }) {
                 type={showToken ? 'text' : 'password'}
                 className="code-input"
                 style={{ height: 'auto', padding: '8px 12px', paddingRight: '36px' }}
-                placeholder="ghp_xxxxxxxxxxxxxxxxxx"
+                placeholder={platform === 'github' ? 'ghp_xxxxxxxxxxxxxxxxxx' : 'glpat-xxxxxxxxxxxxxxxxxxxx'}
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
               />
@@ -552,6 +552,37 @@ function ConnectRepoModal({ isOpen, onClose, onConnect }) {
               >
                 {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
+            </div>
+
+            {/* Direct PAT Generation Link */}
+            <div style={{ marginTop: '6px', fontSize: '11.5px', color: 'var(--text-faint)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+              <span>Don't have a token?</span>
+              <a
+                href={
+                  platform === 'github'
+                    ? 'https://github.com/settings/tokens/new?scopes=repo,read:org&description=SecureCode%20Integration'
+                    : 'https://gitlab.com/-/user_settings/personal_access_tokens'
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#818cf8',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'rgba(99, 102, 241, 0.12)',
+                  padding: '3px 8px',
+                  borderRadius: '5px',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer'
+                }}
+              >
+                <span>Generate {platform === 'github' ? 'GitHub' : 'GitLab'} Token</span>
+                <ExternalLink size={11} />
+              </a>
             </div>
           </div>
 
