@@ -485,8 +485,8 @@ async function askSecurityCopilot({
       citations: [
         { id: "SecureCode-Core", title: "Project Security Auditor", owasp: "Application Defense", severity: "Info" }
       ],
-      suggestedActions: ["Audit My Scan Findings", "Review My Scanned Code", "Check for Secrets in My Project"],
-    };
+  }
+
   // 1a. Architecture, Creation & Model Questions
   const isBuildOrArchQuery =
     /\b(how\s*(were|was|are|r)\s*(u|you)\s*(built|made|created|trained|developed))\b/i.test(cleanQuery) ||
@@ -496,13 +496,11 @@ async function askSecurityCopilot({
 
   if (isBuildOrArchQuery) {
     return {
-      answer: `🏛️ **SecureCode Platform Architecture & PyTorch GNN Model**\n\nSecureCode is engineered with a multi-tiered AI architecture combining a custom Graph Convolutional Network (AST-GNN), Abstract Syntax Tree data-flow extraction, and Retrieval-Augmented Generation. Here is the technical breakdown:\n\n### 1. 🧠 Custom PyTorch AST-GNN Model Architecture\n* **Model Class:** \`ASTGNNClassifier\` (3-layer GCN implemented from scratch in PyTorch).\n* **Node Embeddings:** 64-dimensional feature vectors capturing AST node types, control structures, and variable flow.\n* **Dual Classification Heads:**\n  1. *Binary Head:* Output probability indicating whether the code contains defects (**Buggy vs. Secure**).\n  2. *Multi-Task Head:* 5-way classifier for specific CWE vulnerability categories.\n\n\`\`\`python\n# PyTorch AST-GNN Classifier Architecture\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass ASTGNNClassifier(nn.Module):\n    def __init__(self, in_features=64, hidden_dim=128, num_classes=5):\n        super().__init__()\n        self.conv1 = nn.Linear(in_features, hidden_dim)\n        self.conv2 = nn.Linear(hidden_dim, hidden_dim)\n        self.conv3 = nn.Linear(hidden_dim, 64)\n        \n        # Dual Classification Heads\n        self.bug_head = nn.Linear(64, 1)          # Binary: Buggy / Clean\n        self.cwe_head = nn.Linear(64, num_classes) # Multi-Class: CWE Type\n        self.dropout = nn.Dropout(0.3)\n\n    def forward(self, x, adj_matrix):\n        # 3-Layer Graph Convolution: H = ReLU(A * H * W)\n        h = F.relu(torch.matmul(adj_matrix, self.conv1(x)))\n        h = self.dropout(h)\n        h = F.relu(torch.matmul(adj_matrix, self.conv2(h)))\n        h = F.relu(torch.matmul(adj_matrix, self.conv3(h)))\n        \n        # Global Mean Graph Pooling\n        graph_embedding = torch.mean(h, dim=0, keepdim=True)\n        \n        is_buggy = torch.sigmoid(self.bug_head(graph_embedding))\n        cwe_logits = self.cwe_head(graph_embedding)\n        return is_buggy, cwe_logits\n\`\`\`\n\n### 2. 📚 Training Datasets & Calibration\n* **Devign Dataset:** 27,000+ real-world vulnerability graphs from open-source projects.\n* **HumanEval & MBPP:** Industry benchmark suites used for clean baseline calibration.\n* **Synthetic AST Corpus:** Augmented control-flow graphs with ground-truth bug annotations.\n\n### 3. ⚡ GenAI & RAG Engine\n* **RAG Pipeline:** Grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.\n* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and AST-guided auto-remediation.`,
+      answer: "🔒 **Sorry, but I can't help you with that.**\n\nI am fine-tuned exclusively to audit your project code, explain vulnerability findings, and provide security remediation patches for your codebase.\n\n*Please ask me about your scanned code, scan findings, or how to fix vulnerabilities in your project!*",
       citations: [
-        { id: "ARCH-GNN", title: "PyTorch AST-GNN Classifier", owasp: "Graph Neural Network", severity: "Info" },
-        { id: "RAG-OWASP", title: "OWASP Top 10 & CWE Rulebooks", owasp: "RAG Grounding", severity: "Info" },
-        { id: "SEC-CORE", title: "SecureCode Core Engine", owasp: "Production Architecture", severity: "Info" }
+        { id: "SEC-POLICY", title: "Security Auditor Policy", owasp: "Project Scope", severity: "Info" }
       ],
-      suggestedActions: ["Explain GNN Training", "Audit My Scan Findings", "Review My Scanned Code"]
+      suggestedActions: ["Audit My Scan Findings", "Review My Scanned Code", "Check for Secrets in My Project"]
     };
   }
 
