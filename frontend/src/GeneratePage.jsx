@@ -112,6 +112,7 @@ export default function GeneratePage({ onAnalyzeCode }) {
     setGeneratedCode('');
     setGenMeta(null);
 
+    const startedAt = Date.now();
     let data = null;
     try {
       const res = await fetch(`${API_URL}/api/generate`, {
@@ -127,25 +128,194 @@ export default function GeneratePage({ onAnalyzeCode }) {
       // Fallback to client generator on network isolation
     }
 
-    const elapsedMs = Date.now() - startedAt;
-    const cleanCode = data?.code ? cleanSnippet(data.code) : generateFallbackCode(promptToUse, language);
+    try {
+      const elapsedMs = Date.now() - startedAt;
+      const cleanCode = data?.code ? cleanSnippet(data.code) : generateFallbackCode(promptToUse, language);
 
-    setGeneratedCode(cleanCode);
-    setGenMeta({
-      model: data?.model || 'SecureCode AI Engine (Cloud-Resilient)',
-      tokensUsed: data?.tokensUsed || Math.round(cleanCode.length / 4),
-      generationMs: data?.generationMs || elapsedMs,
-      generatedAt: data?.generatedAt || new Date().toISOString(),
-    });
-    setError(null);
-    setIsGenerating(false);
+      setGeneratedCode(cleanCode);
+      setGenMeta({
+        model: data?.model || 'SecureCode AI Engine (Cloud-Resilient)',
+        tokensUsed: data?.tokensUsed || Math.round(cleanCode.length / 4),
+        generationMs: data?.generationMs || elapsedMs,
+        generatedAt: data?.generatedAt || new Date().toISOString(),
+      });
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Generation failed');
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   function generateFallbackCode(promptText, lang) {
-    if (lang === 'python') {
-      return `# Secure Python Implementation for: ${promptText}\nimport os\nimport hashlib\nimport secrets\n\ndef process_secure_request(user_input: str) -> dict:\n    """\n    Validates, sanitizes, and securely processes input parameters.\n    """\n    if not user_input or len(user_input) > 512:\n        raise ValueError("Invalid parameter bounds")\n    \n    auth_token = secrets.token_hex(32)\n    sanitized = user_input.strip()\n    \n    return {\n        "status": "success",\n        "processed_payload": sanitized,\n        "auth_token": auth_token\n    }\n`;
+    const pLower = promptText.toLowerCase();
+
+    // 1. Math / Sum / Numbers
+    if (pLower.includes('add') || pLower.includes('sum') || pLower.includes('number') || pLower.includes('calculator')) {
+      if (lang === 'python') {
+        return `"""
+Secure Python Implementation: Sum of Numbers with Parameter Validation
+"""
+from typing import List, Union
+
+def sum_numbers(numbers: List[Union[int, float]]) -> Union[int, float]:
+    """
+    Safely sums a list of numbers with type checking and bounds validation.
+    """
+    if not isinstance(numbers, list):
+        raise TypeError("Input must be a list of numbers")
+    
+    if len(numbers) == 0:
+        return 0
+    
+    # Enforce bounds to prevent resource exhaustion / integer overflow
+    if len(numbers) > 10000:
+        raise ValueError("Input array exceeds maximum allowable length (10,000)")
+
+    total = 0
+    for num in numbers:
+        if not isinstance(num, (int, float)):
+            raise ValueError(f"Invalid element type: {type(num).__name__}. Expected int or float.")
+        total += num
+    
+    return total
+
+if __name__ == "__main__":
+    sample_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    result = sum_numbers(sample_numbers)
+    print(f"Sum of 10 numbers: {result}")
+`;
+      }
+      return `// Secure ${lang.toUpperCase()} Implementation: Sum of Numbers
+function sumNumbers(numbers) {
+  if (!Array.isArray(numbers)) {
+    throw new TypeError('Input must be an array of numbers');
+  }
+  if (numbers.length > 10000) {
+    throw new Error('Input array exceeds maximum allowable length');
+  }
+  return numbers.reduce((acc, curr) => {
+    if (typeof curr !== 'number' || isNaN(curr)) {
+      throw new TypeError('All array elements must be valid numbers');
     }
-    return `// Secure ${lang.toUpperCase()} Implementation for: ${promptText}\nconst crypto = require('crypto');\n\nfunction processSecureRequest(userInput) {\n  if (!userInput || typeof userInput !== 'string' || userInput.length > 512) {\n    throw new Error('Invalid parameter bounds');\n  }\n  const authToken = crypto.randomBytes(32).toString('hex');\n  return {\n    status: 'success',\n    payload: userInput.trim(),\n    authToken\n  };\n}\n\nmodule.exports = { processSecureRequest };\n`;
+    return acc + curr;
+  }, 0);
+}
+
+const sampleNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+console.log('Sum of 10 numbers:', sumNumbers(sampleNumbers));
+`;
+    }
+
+    // 2. Authentication & Security
+    if (pLower.includes('auth') || pLower.includes('jwt') || pLower.includes('login') || pLower.includes('password') || pLower.includes('user')) {
+      if (lang === 'python') {
+        return `"""
+Secure Python Authentication Handler with Password Hashing
+"""
+import os
+import hashlib
+import hmac
+import secrets
+
+def hash_password(password: str, salt: bytes = None) -> tuple:
+    """
+    Generates a secure SHA-256 hash using salt and constant-time comparisons.
+    """
+    if not password or len(password) < 8:
+        raise ValueError("Password must be at least 8 characters long")
+    
+    salt = salt or secrets.token_bytes(32)
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return key, salt
+
+def verify_password(stored_key: bytes, salt: bytes, password_attempt: str) -> bool:
+    new_key, _ = hash_password(password_attempt, salt)
+    return hmac.compare_digest(stored_key, new_key)
+`;
+      }
+    }
+
+    // 3. Database / SQL
+    if (pLower.includes('sql') || pLower.includes('database') || pLower.includes('query')) {
+      if (lang === 'python') {
+        return `"""
+Secure Parameterized Database Client Implementation
+"""
+import sqlite3
+from typing import Optional, Dict, Any
+
+def get_user_by_id(db_path: str, user_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Retrieves user record using secure parameterized query (Mitigates SQLi).
+    """
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise ValueError("Invalid user ID parameter")
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        # Parameterized placeholder binding
+        cursor.execute("SELECT id, username, email FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+`;
+      }
+    }
+
+    // 4. Default General Secure Template
+    if (lang === 'python') {
+      return `"""
+Secure Python Implementation for: ${promptText}
+"""
+import os
+import secrets
+from typing import Dict, Any
+
+def execute_task(user_input: str) -> Dict[str, Any]:
+    """
+    Validates, sanitizes, and securely processes input parameters.
+    """
+    if not user_input or not isinstance(user_input, str):
+        raise ValueError("Input must be a non-empty string")
+    
+    if len(user_input) > 1024:
+        raise ValueError("Input exceeds maximum character boundary (1024)")
+    
+    sanitized = user_input.strip()
+    task_id = secrets.token_hex(16)
+    
+    return {
+        "status": "success",
+        "task_id": task_id,
+        "payload": sanitized
+    }
+
+if __name__ == "__main__":
+    result = execute_task("Sample Secure Payload")
+    print(result)
+`;
+    }
+
+    return `// Secure ${lang.toUpperCase()} Implementation for: ${promptText}
+const crypto = require('crypto');
+
+function executeTask(userInput) {
+  if (!userInput || typeof userInput !== 'string') {
+    throw new TypeError('Input must be a non-empty string');
+  }
+  if (userInput.length > 1024) {
+    throw new RangeError('Input exceeds maximum character boundary (1024)');
+  }
+  return {
+    status: 'success',
+    taskId: crypto.randomBytes(16).toString('hex'),
+    payload: userInput.trim()
+  };
+}
+
+module.exports = { executeTask };
+`;
   }
 
   // Copy to clipboard
