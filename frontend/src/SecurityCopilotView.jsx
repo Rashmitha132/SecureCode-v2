@@ -363,13 +363,17 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       findings: activeFindings
     } : null);
 
-    // 1. Architecture, Creation & Model Questions ("how were u built", "who created you", "architecture", "datasets", "model", "gnn")
+    // 1. Architecture, Creation & Model Questions ("how u were built", "how were you built", "what was used to build u", "give the code", "architecture", "datasets", "model", "gnn")
     const isBuildOrArchQuery =
+      /\b(how\s*(were|was|are|r)\s*(u|you)\s*(built|made|created|trained|developed))\b/i.test(qLower) ||
+      /\b(how\s*(u|you)\s*(were|was|are|r)\s*(built|made|created|trained|developed))\b/i.test(qLower) ||
+      /\b(what\s*(was|is|are|were)\s*(the\s+things\s+)?(used\s+to\s+build|used\s+to\s+train|used\s+to\s+create)\s*(u|you|this))\b/i.test(qLower) ||
+      qLower.includes('how u were built') ||
+      qLower.includes('how you were built') ||
       qLower.includes('how were u built') ||
-      qLower.includes('how was this built') ||
-      qLower.includes('how was you built') ||
-      qLower.includes('who built you') ||
-      qLower.includes('who created you') ||
+      qLower.includes('how were you built') ||
+      qLower.includes('used to build u') ||
+      qLower.includes('used to build you') ||
       qLower.includes('architecture') ||
       qLower.includes('what model') ||
       qLower.includes('which model') ||
@@ -385,7 +389,7 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
 
     if (isBuildOrArchQuery) {
       return {
-        answer: `🏛️ **SecureCode Platform Architecture & Model Design**\n\nSecureCode is engineered on a multi-tiered AI architecture combining custom Graph Neural Networks, Abstract Syntax Tree analysis, and Retrieval-Augmented Generation. Here is how the system is designed and trained:\n\n### 1. 🧠 Custom PyTorch AST-GNN Model\n* **Model Type:** 3-layer Graph Convolutional Network (**AST-GNN**) implemented in PyTorch.\n* **Node Embeddings:** 64-dimensional feature vectors capturing AST structural hierarchies and data-flow semantics.\n* **Dual Classification Heads:**\n  1. *Binary Head:* Determines if a code graph contains logic/security defects (**Buggy vs. Secure**).\n  2. *Multi-Task Head:* Categorizes detected defects into **5 CWE Categories** (SQL Injection, Authentication Flaws, Dynamic Code Execution, Hardcoded Secrets, and Logic Vulnerabilities).\n\n### 2. 📚 Training Datasets & Calibration\n* **Devign Dataset:** 27,000+ real-world C/C++ vulnerability graphs used for structural vulnerability pattern recognition.\n* **HumanEval & MBPP:** Benchmark suites used for clean baseline calibration.\n* **Synthetic AST Graph Corpus:** Augmented graph variations containing ground-truth defect annotations.\n\n### 3. ⚡ GenAI & RAG Engine\n* **RAG Pipeline:** Hybrid Lexical + Semantic indexing grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.\n* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and 1-click AST-guided auto-remediation.\n\n### 4. 🔄 Active Continuous Fine-Tuning Loop\n* Every verified scan and remediation feedback instance is queued for automated retraining to iteratively improve model performance over time.`,
+        answer: `🏛️ **SecureCode Platform Architecture & PyTorch GNN Model**\n\nSecureCode is engineered with a multi-tiered AI architecture combining a custom Graph Convolutional Network (AST-GNN), Abstract Syntax Tree data-flow extraction, and Retrieval-Augmented Generation. Here is the technical breakdown:\n\n### 1. 🧠 Custom PyTorch AST-GNN Model Architecture\n* **Model Class:** \`ASTGNNClassifier\` (3-layer GCN implemented from scratch in PyTorch).\n* **Node Embeddings:** 64-dimensional feature vectors capturing AST node types, control structures, and variable flow.\n* **Dual Classification Heads:**\n  1. *Binary Head:* Output probability indicating whether the code contains defects (**Buggy vs. Secure**).\n  2. *Multi-Task Head:* 5-way classifier for specific CWE vulnerability categories.\n\n\`\`\`python\n# PyTorch AST-GNN Classifier Architecture\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass ASTGNNClassifier(nn.Module):\n    def __init__(self, in_features=64, hidden_dim=128, num_classes=5):\n        super().__init__()\n        self.conv1 = nn.Linear(in_features, hidden_dim)\n        self.conv2 = nn.Linear(hidden_dim, hidden_dim)\n        self.conv3 = nn.Linear(hidden_dim, 64)\n        \n        # Dual Classification Heads\n        self.bug_head = nn.Linear(64, 1)          # Binary: Buggy / Clean\n        self.cwe_head = nn.Linear(64, num_classes) # Multi-Class: CWE Type\n        self.dropout = nn.Dropout(0.3)\n\n    def forward(self, x, adj_matrix):\n        # 3-Layer Graph Convolution: H = ReLU(A * H * W)\n        h = F.relu(torch.matmul(adj_matrix, self.conv1(x)))\n        h = self.dropout(h)\n        h = F.relu(torch.matmul(adj_matrix, self.conv2(h)))\n        h = F.relu(torch.matmul(adj_matrix, self.conv3(h)))\n        \n        # Global Mean Graph Pooling\n        graph_embedding = torch.mean(h, dim=0, keepdim=True)\n        \n        is_buggy = torch.sigmoid(self.bug_head(graph_embedding))\n        cwe_logits = self.cwe_head(graph_embedding)\n        return is_buggy, cwe_logits\n\`\`\`\n\n### 2. 📚 Training Datasets & Calibration\n* **Devign Dataset:** 27,000+ real-world vulnerability graphs from open-source projects.\n* **HumanEval & MBPP:** Industry benchmark suites used for clean baseline calibration.\n* **Synthetic AST Corpus:** Augmented control-flow graphs with ground-truth bug annotations.\n\n### 3. ⚡ GenAI & RAG Engine\n* **RAG Pipeline:** Grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.\n* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and AST-guided auto-remediation.`,
         citations: [
           { id: 'ARCH-GNN', title: 'PyTorch AST-GNN Classifier', owasp: 'Graph Neural Network', severity: 'Info' },
           { id: 'RAG-OWASP', title: 'OWASP Top 10 & CWE Rulebooks', owasp: 'RAG Grounding', severity: 'Info' },

@@ -223,28 +223,58 @@ SECURE_HSTS_SECONDS = 31536000`,color:`#10b981`},{title:`Generic Error Responses
 `);n.push((0,U.jsxs)(`div`,{style:{background:`var(--panel-2)`,border:`1px solid var(--border)`,borderRadius:`8px`,padding:`10px 14px`,fontFamily:`monospace`,fontSize:`12px`,color:`var(--text)`,overflowX:`auto`,margin:`6px 0`},children:[i&&(0,U.jsx)(`div`,{style:{fontSize:`10px`,textTransform:`uppercase`,color:`var(--text-faint)`,marginBottom:`4px`,fontWeight:600},children:i}),(0,U.jsx)(`pre`,{style:{margin:0,whiteSpace:`pre-wrap`,fontFamily:`inherit`},children:a})]},`code-${t}`));return}let r=e.split(`
 `),i=0;for(;i<r.length;){let e=r[i].trim();if(!e){i++;continue}if(e.startsWith(`|`)&&e.endsWith(`|`)&&e.length>2){let e=[];for(;i<r.length&&r[i].trim().startsWith(`|`)&&r[i].trim().endsWith(`|`);)e.push(r[i].trim()),i++;if(e.length>=2){let r=e[0].split(`|`).slice(1,-1).map(e=>e.trim()),a=e.slice(1).filter(e=>!e.match(/^\|[\s\-:|]+\|$/));n.push((0,U.jsx)(`div`,{style:{overflowX:`auto`,margin:`8px 0`,borderRadius:`8px`,border:`1.5px solid var(--border)`,background:`var(--panel-2)`},children:(0,U.jsxs)(`table`,{style:{width:`100%`,borderCollapse:`collapse`,fontSize:`12px`,textAlign:`left`},children:[(0,U.jsx)(`thead`,{children:(0,U.jsx)(`tr`,{style:{background:`rgba(99, 102, 241, 0.09)`,borderBottom:`1.5px solid var(--border)`},children:r.map((e,t)=>(0,U.jsx)(`th`,{style:{padding:`8px 12px`,fontWeight:700,color:`var(--text)`,fontSize:`11px`,textTransform:`uppercase`},children:bo(e)},t))})}),(0,U.jsx)(`tbody`,{children:a.map((e,t)=>{let n=e.split(`|`).slice(1,-1).map(e=>e.trim());return(0,U.jsx)(`tr`,{style:{borderBottom:t===a.length-1?`none`:`1px solid var(--border)`},children:n.map((e,t)=>(0,U.jsx)(`td`,{style:{padding:`8px 12px`,color:`var(--text)`,verticalAlign:`top`},children:bo(e)},t))},t)})})]})},`tbl-${t}-${i}`));continue}}if(e.startsWith(`#`)){let r=e.match(/^(#{1,6})\s+(.*)$/);if(r){let e=r[1].length,a=r[2],o=e===1?`16px`:e===2?`14.5px`:`13px`;n.push((0,U.jsx)(`div`,{style:{fontSize:o,fontWeight:700,color:`#818cf8`,marginTop:`10px`,marginBottom:`4px`,display:`flex`,alignItems:`center`,gap:`6px`},children:(0,U.jsx)(`span`,{children:bo(a)})},`h-${t}-${i}`)),i++;continue}}if(e===`---`||e===`***`||e===`___`){n.push((0,U.jsx)(`div`,{style:{height:`1px`,background:`var(--border)`,margin:`8px 0`}},`hr-${t}-${i}`)),i++;continue}let a=e.match(/^(\d+)\.\s+(.*)$/);if(a){n.push((0,U.jsxs)(`div`,{style:{display:`flex`,alignItems:`flex-start`,gap:`8px`,marginLeft:`4px`,margin:`3px 0`},children:[(0,U.jsx)(`span`,{style:{background:`rgba(99, 102, 241, 0.15)`,color:`#818cf8`,fontWeight:700,fontSize:`10.5px`,padding:`1px 6px`,borderRadius:`10px`,flexShrink:0,marginTop:`2px`},children:a[1]}),(0,U.jsx)(`div`,{style:{flex:1,lineHeight:1.5,color:`var(--text)`},children:bo(a[2])})]},`num-${t}-${i}`)),i++;continue}if(e.startsWith(`* `)||e.startsWith(`- `)||e.startsWith(`• `)){let r=e.replace(/^[\*\-•]\s+/,``);n.push((0,U.jsxs)(`div`,{style:{display:`flex`,alignItems:`flex-start`,gap:`8px`,marginLeft:`6px`,margin:`3px 0`},children:[(0,U.jsx)(`span`,{style:{color:`#818cf8`,fontWeight:700,fontSize:`14px`,lineHeight:1},children:`•`}),(0,U.jsx)(`div`,{style:{flex:1,lineHeight:1.5,color:`var(--text)`},children:bo(r)})]},`bullet-${t}-${i}`)),i++;continue}n.push((0,U.jsx)(`div`,{style:{lineHeight:1.55,color:`var(--text)`,margin:`2px 0`},children:bo(e)},`p-${t}-${i}`)),i++}}),(0,U.jsx)(`div`,{style:{display:`flex`,flexDirection:`column`,gap:`4px`},children:n})}function So({results:e,code:t,goToNav:n}){let[r,i]=(0,_.useState)(`chat`),[a,o]=(0,_.useState)(``),[s,c]=(0,_.useState)(!1),[l,u]=(0,_.useState)(null),[d,f]=(0,_.useState)([{id:`welcome`,role:`assistant`,content:`👋 Hello! I am your **Project Security Auditor**.
 
-I am fine-tuned exclusively to audit your **scanned code**, explain the **findings in your project**, and provide secure patches tailored to your code. What would you like me to inspect in your project?`,citations:[{id:`OWASP-A03`,title:`OWASP Top 10:2021`,owasp:`A03:2021-Injection`,severity:`Info`},{id:`CWE-KB`,title:`CWE Security Knowledge Base`,owasp:`Industry Standard`,severity:`Info`}],timestamp:new Date().toLocaleTimeString([],{hour:`2-digit`,minute:`2-digit`})}]),[p,m]=(0,_.useState)([]),[h,g]=(0,_.useState)([]),[v,y]=(0,_.useState)(``),[b,x]=(0,_.useState)(null),S=(0,_.useRef)(null);(0,_.useEffect)(()=>{S.current?.scrollIntoView({behavior:`smooth`})},[d,s]),(0,_.useEffect)(()=>{fetch(`${vo}/api/rag/knowledge`).then(e=>e.json()).then(e=>{m(e.knowledgeBase||[]),g(e.templates||[])}).catch(e=>console.error(`Failed to load security knowledge:`,e))},[]);function C(n){let r=n.toLowerCase().trim(),i=e?.findings||[],a=[];try{a=JSON.parse(localStorage.getItem(`sc_local_history`)||`[]`)}catch{}let o=a[0]||(e?{scanned_at:new Date().toISOString(),risk_score:e.riskScore||0,risk_level:e.riskLevel||`Low`,total_findings:e.totalFindings||0,findings:i}:null),s=r.includes(`how were u built`)||r.includes(`how was this built`)||r.includes(`how was you built`)||r.includes(`who built you`)||r.includes(`who created you`)||r.includes(`architecture`)||r.includes(`what model`)||r.includes(`which model`)||r.includes(`dataset`)||r.includes(`gnn`)||r.includes(`how does it work`)||r.includes(`how does this work`)||r.includes(`how do you work`)||r.includes(`how do u work`)||r.includes(`tell me about your model`)||r.includes(`tell me about your architecture`)||r.includes(`technology stack`);if(s)return{answer:`🏛️ **SecureCode Platform Architecture & Model Design**
+I am fine-tuned exclusively to audit your **scanned code**, explain the **findings in your project**, and provide secure patches tailored to your code. What would you like me to inspect in your project?`,citations:[{id:`OWASP-A03`,title:`OWASP Top 10:2021`,owasp:`A03:2021-Injection`,severity:`Info`},{id:`CWE-KB`,title:`CWE Security Knowledge Base`,owasp:`Industry Standard`,severity:`Info`}],timestamp:new Date().toLocaleTimeString([],{hour:`2-digit`,minute:`2-digit`})}]),[p,m]=(0,_.useState)([]),[h,g]=(0,_.useState)([]),[v,y]=(0,_.useState)(``),[b,x]=(0,_.useState)(null),S=(0,_.useRef)(null);(0,_.useEffect)(()=>{S.current?.scrollIntoView({behavior:`smooth`})},[d,s]),(0,_.useEffect)(()=>{fetch(`${vo}/api/rag/knowledge`).then(e=>e.json()).then(e=>{m(e.knowledgeBase||[]),g(e.templates||[])}).catch(e=>console.error(`Failed to load security knowledge:`,e))},[]);function C(n){let r=n.toLowerCase().trim(),i=e?.findings||[],a=[];try{a=JSON.parse(localStorage.getItem(`sc_local_history`)||`[]`)}catch{}let o=a[0]||(e?{scanned_at:new Date().toISOString(),risk_score:e.riskScore||0,risk_level:e.riskLevel||`Low`,total_findings:e.totalFindings||0,findings:i}:null),s=/\b(how\s*(were|was|are|r)\s*(u|you)\s*(built|made|created|trained|developed))\b/i.test(r)||/\b(how\s*(u|you)\s*(were|was|are|r)\s*(built|made|created|trained|developed))\b/i.test(r)||/\b(what\s*(was|is|are|were)\s*(the\s+things\s+)?(used\s+to\s+build|used\s+to\s+train|used\s+to\s+create)\s*(u|you|this))\b/i.test(r)||r.includes(`how u were built`)||r.includes(`how you were built`)||r.includes(`how were u built`)||r.includes(`how were you built`)||r.includes(`used to build u`)||r.includes(`used to build you`)||r.includes(`architecture`)||r.includes(`what model`)||r.includes(`which model`)||r.includes(`dataset`)||r.includes(`gnn`)||r.includes(`how does it work`)||r.includes(`how does this work`)||r.includes(`how do you work`)||r.includes(`how do u work`)||r.includes(`tell me about your model`)||r.includes(`tell me about your architecture`)||r.includes(`technology stack`);if(s)return{answer:`🏛️ **SecureCode Platform Architecture & PyTorch GNN Model**
 
-SecureCode is engineered on a multi-tiered AI architecture combining custom Graph Neural Networks, Abstract Syntax Tree analysis, and Retrieval-Augmented Generation. Here is how the system is designed and trained:
+SecureCode is engineered with a multi-tiered AI architecture combining a custom Graph Convolutional Network (AST-GNN), Abstract Syntax Tree data-flow extraction, and Retrieval-Augmented Generation. Here is the technical breakdown:
 
-### 1. 🧠 Custom PyTorch AST-GNN Model
-* **Model Type:** 3-layer Graph Convolutional Network (**AST-GNN**) implemented in PyTorch.
-* **Node Embeddings:** 64-dimensional feature vectors capturing AST structural hierarchies and data-flow semantics.
+### 1. 🧠 Custom PyTorch AST-GNN Model Architecture
+* **Model Class:** \`ASTGNNClassifier\` (3-layer GCN implemented from scratch in PyTorch).
+* **Node Embeddings:** 64-dimensional feature vectors capturing AST node types, control structures, and variable flow.
 * **Dual Classification Heads:**
-  1. *Binary Head:* Determines if a code graph contains logic/security defects (**Buggy vs. Secure**).
-  2. *Multi-Task Head:* Categorizes detected defects into **5 CWE Categories** (SQL Injection, Authentication Flaws, Dynamic Code Execution, Hardcoded Secrets, and Logic Vulnerabilities).
+  1. *Binary Head:* Output probability indicating whether the code contains defects (**Buggy vs. Secure**).
+  2. *Multi-Task Head:* 5-way classifier for specific CWE vulnerability categories.
+
+\`\`\`python
+# PyTorch AST-GNN Classifier Architecture
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class ASTGNNClassifier(nn.Module):
+    def __init__(self, in_features=64, hidden_dim=128, num_classes=5):
+        super().__init__()
+        self.conv1 = nn.Linear(in_features, hidden_dim)
+        self.conv2 = nn.Linear(hidden_dim, hidden_dim)
+        self.conv3 = nn.Linear(hidden_dim, 64)
+        
+        # Dual Classification Heads
+        self.bug_head = nn.Linear(64, 1)          # Binary: Buggy / Clean
+        self.cwe_head = nn.Linear(64, num_classes) # Multi-Class: CWE Type
+        self.dropout = nn.Dropout(0.3)
+
+    def forward(self, x, adj_matrix):
+        # 3-Layer Graph Convolution: H = ReLU(A * H * W)
+        h = F.relu(torch.matmul(adj_matrix, self.conv1(x)))
+        h = self.dropout(h)
+        h = F.relu(torch.matmul(adj_matrix, self.conv2(h)))
+        h = F.relu(torch.matmul(adj_matrix, self.conv3(h)))
+        
+        # Global Mean Graph Pooling
+        graph_embedding = torch.mean(h, dim=0, keepdim=True)
+        
+        is_buggy = torch.sigmoid(self.bug_head(graph_embedding))
+        cwe_logits = self.cwe_head(graph_embedding)
+        return is_buggy, cwe_logits
+\`\`\`
 
 ### 2. 📚 Training Datasets & Calibration
-* **Devign Dataset:** 27,000+ real-world C/C++ vulnerability graphs used for structural vulnerability pattern recognition.
-* **HumanEval & MBPP:** Benchmark suites used for clean baseline calibration.
-* **Synthetic AST Graph Corpus:** Augmented graph variations containing ground-truth defect annotations.
+* **Devign Dataset:** 27,000+ real-world vulnerability graphs from open-source projects.
+* **HumanEval & MBPP:** Industry benchmark suites used for clean baseline calibration.
+* **Synthetic AST Corpus:** Augmented control-flow graphs with ground-truth bug annotations.
 
 ### 3. ⚡ GenAI & RAG Engine
-* **RAG Pipeline:** Hybrid Lexical + Semantic indexing grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.
-* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and 1-click AST-guided auto-remediation.
-
-### 4. 🔄 Active Continuous Fine-Tuning Loop
-* Every verified scan and remediation feedback instance is queued for automated retraining to iteratively improve model performance over time.`,citations:[{id:`ARCH-GNN`,title:`PyTorch AST-GNN Classifier`,owasp:`Graph Neural Network`,severity:`Info`},{id:`RAG-OWASP`,title:`OWASP Top 10 & CWE Rulebooks`,owasp:`RAG Grounding`,severity:`Info`},{id:`SEC-CORE`,title:`SecureCode Core Engine`,owasp:`Production Architecture`,severity:`Info`}]};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(r)||r.startsWith(`who r u`)||r.startsWith(`who are u`)||r.startsWith(`who r you`)||r.startsWith(`who are you`)||r===`hi`||r===`hello`||r===`hey`)return{answer:`👋 I am **SecureCode Copilot**, an AI security assistant created to help you audit your project, understand vulnerable code, explain security findings, and provide secure remediation patches for your codebase.
+* **RAG Pipeline:** Grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.
+* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and AST-guided auto-remediation.`,citations:[{id:`ARCH-GNN`,title:`PyTorch AST-GNN Classifier`,owasp:`Graph Neural Network`,severity:`Info`},{id:`RAG-OWASP`,title:`OWASP Top 10 & CWE Rulebooks`,owasp:`RAG Grounding`,severity:`Info`},{id:`SEC-CORE`,title:`SecureCode Core Engine`,owasp:`Production Architecture`,severity:`Info`}]};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(r)||r.startsWith(`who r u`)||r.startsWith(`who are u`)||r.startsWith(`who r you`)||r.startsWith(`who are you`)||r===`hi`||r===`hello`||r===`hey`)return{answer:`👋 I am **SecureCode Copilot**, an AI security assistant created to help you audit your project, understand vulnerable code, explain security findings, and provide secure remediation patches for your codebase.
 
 ### 🛡️ How I Can Help You:
 * **Inspect Vulnerable Code:** Audit your project files for security flaws like SQL Injection, XSS, insecure eval, and exposed credentials.
