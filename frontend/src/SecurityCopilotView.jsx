@@ -348,7 +348,7 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
   }, []);
 
   function generateClientCopilotAnswer(userQuery) {
-    const qLower = userQuery.toLowerCase();
+    const qLower = userQuery.toLowerCase().trim();
     const activeFindings = results?.findings || [];
     let localHist = [];
     try {
@@ -363,7 +363,56 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       findings: activeFindings
     } : null);
 
-    // 1. Recent Scan Inquiries
+    // 1. Architecture, Creation & Model Questions ("how were u built", "who created you", "architecture", "datasets", "model", "gnn")
+    const isBuildOrArchQuery =
+      qLower.includes('how were u built') ||
+      qLower.includes('how was this built') ||
+      qLower.includes('how was you built') ||
+      qLower.includes('who built you') ||
+      qLower.includes('who created you') ||
+      qLower.includes('architecture') ||
+      qLower.includes('what model') ||
+      qLower.includes('which model') ||
+      qLower.includes('dataset') ||
+      qLower.includes('gnn') ||
+      qLower.includes('how does it work') ||
+      qLower.includes('how does this work') ||
+      qLower.includes('how do you work') ||
+      qLower.includes('how do u work') ||
+      qLower.includes('tell me about your model') ||
+      qLower.includes('tell me about your architecture') ||
+      qLower.includes('technology stack');
+
+    if (isBuildOrArchQuery) {
+      return {
+        answer: `🏛️ **SecureCode v2 — Platform Architecture & Model Design**\n\nI was built by **Rashmitha S** as part of the **SecureCode AI Platform** (AI Career for Women / Edunet Project). Here is how my system was designed and trained:\n\n### 1. 🧠 Custom PyTorch AST-GNN Model\n* **Model Type:** 3-layer Graph Convolutional Network (**AST-GNN**) built from scratch in PyTorch.\n* **Node Embeddings:** 64-dimensional AST feature vectors capturing Abstract Syntax Tree structural flow.\n* **Dual Classification Heads:**\n  1. *Binary Head:* Classifies code as **Buggy / Secure** (Sigmoid output).\n  2. *Multi-Task Head:* Classifies bug into **5 CWE Categories** (SQLi, Auth Bypass, Insecure Eval, Secret Leak, Buffer/Overflow).\n\n### 2. 📚 Training Datasets & Benchmarks\n* **Devign Dataset:** 27,000+ real-world C/C++ vulnerability graphs for bug graph patterns.\n* **HumanEval & MBPP:** Benchmark datasets used for clean baseline reference.\n* **Synthetic AST Graph Corpus:** Augmented graph transformations for security defect learning.\n\n### 3. ⚡ GenAI & RAG Engine\n* **RAG Pipeline:** Lexical (TF-IDF/BM25) + Semantic indexing grounded strictly on **OWASP Top 10:2021** and **MITRE CWE** standards.\n* **LLM Engine:** Groq-accelerated LLaMA-3.3-70B for real-time prompt-to-code synthesis and 1-click AST-guided auto-remediation.\n\n### 4. 🔄 Active Continuous Fine-Tuning Loop\n* Every scan and verified remediation feeds into the active training registry to increment model accuracy over time.`,
+        citations: [
+          { id: 'ARCH-GNN', title: 'PyTorch AST-GNN Classifier', owasp: 'Graph Neural Network', severity: 'Info' },
+          { id: 'RAG-OWASP', title: 'OWASP Top 10 & CWE Rulebooks', owasp: 'RAG Grounding', severity: 'Info' },
+          { id: 'AICW-2026', title: 'AI Career for Women (Edunet)', owasp: 'Project Lead: Rashmitha S', severity: 'Info' }
+        ]
+      };
+    }
+
+    // 2. Identity & capabilities inquiry ("who are you", "what can you do", "introduce yourself")
+    if (
+      qLower.includes('who are you') ||
+      qLower.includes('what can you do') ||
+      qLower.includes('introduce yourself') ||
+      qLower.includes('what is your purpose') ||
+      qLower === 'hi' ||
+      qLower === 'hello' ||
+      qLower === 'hey'
+    ) {
+      return {
+        answer: "👋 Hello! I am **SecureCode Copilot**, your dedicated AI Project Security Auditor.\n\nHere is how I can assist with your project:\n* **Audit Scanned Code:** Inspect your code for vulnerabilities (SQL Injection, XSS, exposed secrets, broken auth).\n* **Explain Scan Findings:** Break down security issues and connect them to official OWASP Top 10 & CWE standards.\n* **Generate Secure Patches:** Provide tailored, copy-ready fixes to remediate vulnerabilities in your code.\n* **Explain Platform Architecture:** Share details on our custom PyTorch AST-GNN model, training datasets, and RAG pipeline.\n\nWhat would you like me to inspect in your project?",
+        citations: [
+          { id: 'SecureCode-Core', title: 'Project Security Auditor', owasp: 'Application Defense', severity: 'Info' }
+        ]
+      };
+    }
+
+    // 3. Recent Scan Inquiries
     if (qLower.includes('recent') || qLower.includes('last scan') || qLower.includes('history') || qLower.includes('previous scan')) {
       if (!recentScan) {
         return {
@@ -401,7 +450,7 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 2. Secret & API Key Inquiries
+    // 4. Secret & API Key Inquiries
     if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
       const secretFindings = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.method === 'entropy');
       if (secretFindings.length > 0) {
@@ -421,7 +470,7 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 3. SQL Injection & Injection Inquiries
+    // 5. SQL Injection & Injection Inquiries
     if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('xss') || qLower.includes('sqli')) {
       return {
         answer: `🛡️ **OWASP A03:2021 — Injection Remediation Guide**\n\nInjection flaws occur when untrusted user input is directly concatenated into database queries or execution commands.\n\n### ❌ Insecure Pattern (Vulnerable):\n\`\`\`python\nquery = "SELECT * FROM users WHERE user = '" + username + "'"\ncursor.execute(query)\n\`\`\`\n\n### ✅ Secure Remediated Pattern (Parameterized):\n\`\`\`python\nquery = "SELECT * FROM users WHERE user = %s"\ncursor.execute(query, (username,))\n\`\`\`\n\n**Best Practice:** Always use parameterized placeholders or an ORM like SQLAlchemy / Prisma.`,
@@ -432,7 +481,25 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 4. Default / General Security Audit Response
+    // 6. Check for off-topic / unrelated queries to strictly decline
+    const allowedSecurityTerms = [
+      'vulnerabilit', 'fix', 'patch', 'remediat', 'scan', 'finding', 'cwe', 'cve', 'owasp',
+      'code', 'secret', 'key', 'token', 'sql', 'injection', 'xss', 'cors', 'auth', 'password',
+      'secure', 'security', 'step', 'how to', 'how will', 'error', 'bug', 'leak', 'file', 'script',
+      'project', 'repair', 'mitigat', 'protect', 'sanitize', 'audit', 'result', 'model', 'gnn',
+      'dataset', 'training', 'loss', 'python', 'javascript', 'java', 'c++', 'ast', 'entropy', 'eval'
+    ];
+
+    const hasSecurityIntent = allowedSecurityTerms.some(t => qLower.includes(t)) || Boolean(code);
+
+    if (!hasSecurityIntent) {
+      return {
+        answer: "🔒 **Project Scope Policy**\n\nI am fine-tuned exclusively to audit your **SecureCode project, explain its ML/GenAI architecture, inspect scanned code, and generate vulnerability patches**.\n\nI cannot assist with general knowledge, jokes, or non-security inquiries.\n\n*Please ask me about your scanned code, scan findings, or how the SecureCode model was built!*",
+        citations: []
+      };
+    }
+
+    // 7. General Security Audit Response for active code
     return {
       answer: `🛡️ **Security Copilot Analysis for Your Project:**\n\nBased on your active project scan:\n* **Code Context:** ${code ? `Auditing ${code.split('\n').length} lines of code.` : 'No code currently pasted in Code Scan.'}\n* **Active Vulnerabilities:** ${activeFindings.length} issues identified.\n\n### Recommended Next Steps:\n1. Use **AI Auto-Repair** in the Scan Results tab to automatically generate a verified patch diff.\n2. Review any hardcoded variables and migrate them to an environment configuration.\n3. Validate all incoming parameter bounds to prevent unauthorized resource consumption.`,
       citations: [
