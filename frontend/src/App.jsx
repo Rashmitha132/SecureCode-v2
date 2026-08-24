@@ -7,7 +7,7 @@ import {
   Home, GitCompare, Folder, Bookmark, TrendingUp, Gauge, CalendarDays,
   UploadCloud, Check, Bug, Wrench, Gauge as GaugeIcon,
   Eye, EyeOff, Copy, Database, Cloud, ExternalLink, Download,
-  Wand2, Loader2,
+  Wand2, Loader2, Sparkles,
 } from 'lucide-react';
 import './App.css';
 import ProjectsPanel from './ProjectsPanel';
@@ -15,6 +15,7 @@ import GeneratePage from './GeneratePage';
 import RepairView from './RepairView';
 import LearningDashboard from './LearningDashboard';
 import DashboardView from './DashboardView';
+import LandingPageView from './LandingPageView';
 import CodeScanView, { checkIsCode } from './CodeScanView';
 import ScanResultsView from './ScanResultsView';
 import ScanHistoryView from './ScanHistoryView';
@@ -37,7 +38,10 @@ const API_URL = 'http://localhost:4000';
 const NAV_GROUPS = [
   {
     label: 'Overview',
-    items: [{ label: 'Dashboard', icon: Home }],
+    items: [
+      { label: 'Landing Page', icon: Sparkles },
+      { label: 'Dashboard', icon: Home },
+    ],
   },
   {
     label: 'Scan',
@@ -2780,7 +2784,7 @@ function downloadJSON(filename, data) {
 
 export default function App() {
   const [code, setCode] = useState('');
-  const [activeNav, setActiveNav] = useState('Code Scan');
+  const [activeNav, setActiveNav] = useState('Landing Page');
   const [scanning, setScanning] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -3132,6 +3136,10 @@ export default function App() {
   }
 
   function renderPlaceholderPanel() {
+    if (activeNav === 'Landing Page') {
+      return <LandingPageView goToNav={goToNav} />;
+    }
+
     // ── Phase 1: Generate Code page ──
     if (activeNav === 'Generate Code') {
       return <GeneratePage onAnalyzeCode={generateToScan} />;

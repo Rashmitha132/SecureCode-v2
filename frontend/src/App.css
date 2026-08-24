@@ -18,6 +18,20 @@
   color: var(--text);
 }
 
+.theme-light {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --panel-2: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-dim: #475569;
+  --text-faint: #94a3b8;
+  --grad: linear-gradient(90deg, #2563eb, #6366f1, #c026d3);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
 html, body, #root { min-height: 100%; }
 /* Lock the browser window itself from scrolling — the sidebar and main
    panel below each get their own independent scroll area instead. */

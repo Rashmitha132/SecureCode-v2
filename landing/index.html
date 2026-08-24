@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- Security Headers (CSP & Protection) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <title>SecureCode v2 — Self-Improving Code Generation & AI Bug Detection</title>
+  <meta name="description" content="Autonomous AI Code Generation, 4-Tier Hybrid Vulnerability Detection (Regex + Entropy + LLM + PyTorch AST GNN), and 1-Click Auto-Repair.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       CSS SYSTEM & DUAL THEME TOKENS (LIGHT & DARK PERFECT HARMONY)
+       ========================================================================== */
+    :root {
+      /* Dark Theme (Default) */
+      --bg: #0a0c12;
+      --bg-alt: #0e111a;
+      --panel: #12141c;
+      --panel-2: #171a24;
+      --panel-3: #1f2333;
+      --border: #232633;
+      --border-highlight: rgba(255, 255, 255, 0.12);
+      
+      --text: #f1f3f7;
+      --text-heading: #ffffff;
+      --text-dim: #9499a8;
+      --text-faint: #5c6273;
+      
+      --nav-bg: rgba(10, 12, 18, 0.88);
+      --nav-border: #232633;
+      --code-bg: #090b10;
+      
+      --cyan: #3ba7f0;
+      --indigo: #7c6ee8;
+      --pink: #d94fc0;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #ef4444;
+      
+      --grad-brand: linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 50%, #d94fc0 100%);
+      --grad-brand-h: linear-gradient(90deg, #3ba7f0 0%, #7c6ee8 50%, #d94fc0 100%);
+      --grad-card: linear-gradient(180deg, rgba(23, 26, 36, 0.85) 0%, rgba(18, 20, 28, 0.95) 100%);
+      --grad-badge: rgba(23, 26, 36, 0.9);
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.55);
+      --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.7);
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, Monaco, monospace;
+      
+      --nav-height: 72px;
+      --container-max: 1240px;
+    }
+
+    /* Light Theme (Clean, Crisp, High Contrast) */
+    html.light {
+      --bg: #f8fafc;
+      --bg-alt: #f1f5f9;
+      --panel: #ffffff;
+      --panel-2: #f1f5f9;
+      --panel-3: #e2e8f0;
+      --border: #e2e8f0;
+      --border-highlight: rgba(0, 0, 0, 0.12);
+      
+      --text: #1e293b;
+      --text-heading: #0f172a;
+      --text-dim: #475569;
+      --text-faint: #94a3b8;
+      
+      --nav-bg: rgba(255, 255, 255, 0.92);
+      --nav-border: #e2e8f0;
+      --code-bg: #0f172a;
+      
+      --grad-card: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      --grad-badge: rgba(241, 245, 249, 0.95);
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
+    }
+
+    /* ==========================================================================
+       RESET & BASE
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      color-scheme: dark light;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    a {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    a:hover {
+      color: var(--indigo);
+    }
+
+    code, pre {
+      font-family: var(--font-mono);
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Background Animation Canvas */
+    #ambient-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    /* ==========================================================================
+       NAVIGATION BAR & MOBILE DRAWER
+       ========================================================================== */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--nav-height);
+      background: var(--nav-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--nav-border);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    .navbar.scrolled {
+      box-shadow: var(--shadow-md);
+      border-bottom-color: var(--border-highlight);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, rgba(59, 167, 240, 0.2), rgba(124, 110, 232, 0.2));
+      border: 1px solid rgba(59, 167, 240, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+    }
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: var(--text-heading);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--grad-brand);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      list-style: none;
+    }
+    .nav-link {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: color 0.2s ease;
+    }
+    .nav-link:hover {
+      color: var(--text-heading);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      outline: none;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--grad-brand);
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(59, 167, 240, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 110, 232, 0.45);
+    }
+    .btn-secondary {
+      background: var(--panel-2);
+      border-color: var(--border);
+      color: var(--text-heading) !important;
+    }
+    .btn-secondary:hover {
+      background: var(--panel-3);
+      border-color: var(--border-highlight);
+      transform: translateY(-2px);
+    }
+    .btn-sm {
+      padding: 7px 14px;
+      font-size: 0.82rem;
+    }
+    .btn-lg {
+      padding: 14px 28px;
+      font-size: 1rem;
+      border-radius: var(--radius-md);
+    }
+
+    .theme-toggle-btn {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      color: var(--text-heading);
+      border-color: var(--border-highlight);
+    }
+
+    /* Mobile Hamburger Menu Toggle */
+    .mobile-toggle {
+      display: none;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text-heading);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Mobile Slide-Down Drawer */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: var(--nav-height);
+      left: 0;
+      width: 100%;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px;
+      z-index: 999;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .mobile-drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      display: block;
+    }
+    .mobile-nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .mobile-nav-link {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      display: block;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Responsive Navigation breakpoint */
+    @media (max-width: 960px) {
+      .nav-links { display: none; }
+      .mobile-toggle { display: flex; }
+      .nav-actions .btn-sm { display: none; }
+    }
+
+    /* ==========================================================================
+       HERO SECTION
+       ========================================================================== */
+    .hero-section {
+      padding-top: calc(var(--nav-height) + 40px);
+      padding-bottom: 60px;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .hero-badge-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--grad-badge);
+      border: 1px solid rgba(59, 167, 240, 0.35);
+      border-radius: var(--radius-full);
+      margin-bottom: 24px;
+      box-shadow: 0 0 20px rgba(59, 167, 240, 0.12);
+      max-width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .hero-badge-pill {
+      background: var(--grad-brand);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+    }
+    .hero-badge-text {
+      font-size: 0.82rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 5.5vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
+      color: var(--text-heading);
+    }
+    .grad-text {
+      background: var(--grad-brand-h);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--text-dim);
+      max-width: 760px;
+      margin: 0 auto 32px;
+      line-height: 1.65;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      max-width: 860px;
+      margin: 0 auto 50px;
+    }
+    @media (max-width: 640px) {
+      .hero-metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .metric-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .metric-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      line-height: 1.2;
+    }
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       HERO CODE / SCANNER WINDOW
+       ========================================================================== */
+    .hero-preview {
+      max-width: 1040px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      text-align: left;
+    }
+    .window-header {
+      background: var(--panel-2);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .window-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .window-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .window-title {
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .window-body {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      min-height: 400px;
+    }
+    @media (max-width: 880px) {
+      .window-body { grid-template-columns: 1fr; }
+    }
+
+    .editor-pane {
+      padding: 18px;
+      border-right: 1px solid var(--border);
+      background: var(--code-bg);
+      display: flex;
+      flex-direction: column;
+      overflow-x: auto;
+    }
+    .editor-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .editor-tab {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 4px 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+    .editor-tab.active {
+      background: rgba(59, 167, 240, 0.15);
+      border-color: rgba(59, 167, 240, 0.5);
+      color: var(--cyan);
+    }
+
+    .code-view {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.65;
+      color: #d1d5db;
+    }
+    .code-line {
+      display: flex;
+      gap: 14px;
+    }
+    .line-num {
+      color: #6b7280;
+      user-select: none;
+      width: 20px;
+      text-align: right;
+    }
+    .kw { color: #f472b6; }
+    .fn { color: #60a5fa; }
+    .str { color: #34d399; }
+    .comment { color: #9ca3af; font-style: italic; }
+    .vuln-line {
+      background: rgba(239, 68, 68, 0.2);
+      border-left: 3px solid #ef4444;
+      margin: 0 -18px;
+      padding: 0 18px;
+    }
+
+    .analysis-pane {
+      padding: 18px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-critical {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #ef4444;
+    }
+    .status-clean {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+    }
+
+    .findings-card {
+      background: var(--panel-2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .finding-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .finding-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-heading);
+    }
+    .finding-cwe {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .finding-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .detection-layers-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .layer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      padding: 6px 10px;
+      background: var(--panel);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .layer-name {
+      color: var(--text-dim);
+    }
+    .layer-res {
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .res-detected { color: #ef4444; }
+    .res-clean { color: #10b981; }
+
+    /* ==========================================================================
+       SECTIONS SHARED
+       ========================================================================== */
+    .section {
+      padding: 70px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .section-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 44px;
+    }
+    .section-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: var(--text-heading);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .section-desc {
+      font-size: 1rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       4-TIER ENGINES
+       ========================================================================== */
+    .engine-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 1024px) {
+      .engine-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .engine-grid { grid-template-columns: 1fr; }
+    }
+
+    .engine-card {
+      background: var(--grad-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .engine-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-highlight);
+      box-shadow: var(--shadow-md);
+    }
+
+    .engine-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .icon-cyan { background: rgba(59, 167, 240, 0.15); color: var(--cyan); }
+    .icon-indigo { background: rgba(124, 110, 232, 0.15); color: var(--indigo); }
+    .icon-pink { background: rgba(217, 79, 192, 0.15); color: var(--pink); }
+    .icon-emerald { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
+
+    .engine-tier {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .engine-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 10px;
+    }
+    .engine-desc {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .engine-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .engine-tag {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      padding: 3px 8px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+
+    /* ==========================================================================
+       INTERACTIVE PLAYGROUND
+       ========================================================================== */
+    .playground-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .playground-toolbar {
+      background: var(--panel-2);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .sample-select {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-heading);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+      max-width: 100%;
+    }
+
+    .playground-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 420px;
+    }
+    @media (max-width: 860px) {
+      .playground-grid { grid-template-columns: 1fr; }
+    }
+
+    .playground-input-pane {
+      padding: 20px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--code-bg);
+    }
+    .code-editor-textarea {
+      width: 100%;
+      flex: 1;
+      min-height: 240px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      resize: none;
+    }
+
+    .playground-output-pane {
+      padding: 20px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .score-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1rem;
+      border: 3px solid;
+    }
+    .score-danger { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    .score-safe { border-color: #10b981; color: #10b981; background: rgba(16, 185, 129, 0.1); }
+
+    .diff-viewer {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      color: #d1d5db;
+    }
+    .diff-del { color: #f87171; background: rgba(239, 68, 68, 0.2); display: block; padding: 2px 6px; border-radius: 3px; margin-bottom: 4px; }
+    .diff-add { color: #34d399; background: rgba(16, 185, 129, 0.2); display: block; padding: 2px 6px; border-radius: 3px; }
+
+    /* ==========================================================================
+       SELF-LEARNING STEPS
+       ========================================================================== */
+    .workflow-container {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      box-shadow: var(--shadow-md);
+    }
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 1024px) {
+      .workflow-steps { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .workflow-steps { grid-template-columns: 1fr; }
+    }
+
+    .workflow-step {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+    .step-num {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid var(--border-highlight);
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       FEATURES GRID
+       ========================================================================== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 960px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 580px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 26px 20px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+    }
+    .feature-box:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      margin-bottom: 8px;
+    }
+    .feature-text {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    /* ==========================================================================
+       COMPARISON TABLE (TOUCH SCROLLABLE)
+       ========================================================================== */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+      -webkit-overflow-scrolling: touch;
+    }
+    .comp-table {
+      width: 100%;
+      min-width: 620px;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    .comp-table th, .comp-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .comp-table th {
+      background: var(--panel-2);
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .comp-table th.highlight-col {
+      background: rgba(59, 167, 240, 0.12);
+      color: var(--cyan);
+      border-bottom: 2px solid var(--cyan);
+    }
+    .comp-table td.highlight-col {
+      background: rgba(59, 167, 240, 0.04);
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+    .check-yes { color: #10b981; font-weight: 700; }
+    .check-no { color: #ef4444; }
+    .check-partial { color: #f59e0b; }
+
+    /* ==========================================================================
+       FAQ ACCORDION
+       ========================================================================== */
+    .faq-container {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .faq-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+    .faq-item.active {
+      border-color: var(--cyan);
+    }
+    .faq-header {
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      font-size: 0.96rem;
+      color: var(--text-heading);
+      gap: 12px;
+    }
+    .faq-icon {
+      transition: transform 0.3s ease;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+      color: var(--cyan);
+    }
+    .faq-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      padding: 0 20px;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .faq-item.active .faq-body {
+      max-height: 320px;
+      padding-bottom: 18px;
+    }
+
+    /* ==========================================================================
+       BOTTOM CTA & FOOTER
+       ========================================================================== */
+    .cta-card {
+      background: var(--grad-card);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 50px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .footer {
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border);
+      padding: 50px 0 24px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+    @media (max-width: 860px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+    .footer-col-title {
+      color: var(--text-heading);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+    }
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .footer-link {
+      color: var(--text-dim);
+    }
+    .footer-link:hover {
+      color: var(--text-heading);
+    }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.78rem;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Particle Mesh Canvas -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- NAVIGATION BAR -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#hero" class="brand-logo" aria-label="SecureCode Home">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          SecureCode <span class="brand-badge">v2.4</span>
+        </div>
+      </a>
+
+      <!-- Desktop Links -->
+      <ul class="nav-links">
+        <li><a href="#hybrid-engine" class="nav-link">4-Tier Detection</a></li>
+        <li><a href="#playground" class="nav-link">Interactive Scanner</a></li>
+        <li><a href="#self-learning" class="nav-link">Self-Learning</a></li>
+        <li><a href="#features" class="nav-link">DevSecOps Suite</a></li>
+        <li><a href="#comparison" class="nav-link">Benchmarks</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <!-- Theme Toggle Button -->
+        <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme" aria-label="Toggle Light/Dark Theme">
+          <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg id="themeIconMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Launch Button -->
+        <a href="#playground" class="btn btn-primary btn-sm">
+          <span>⚡ Launch Live App</span>
+        </a>
+
+        <!-- Mobile Hamburger Toggle -->
+        <button id="mobileMenuBtn" class="mobile-toggle" aria-label="Open Mobile Navigation">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MOBILE SLIDE-DOWN DRAWER -->
+  <div id="mobileDrawer" class="mobile-drawer">
+    <ul class="mobile-nav-links">
+      <li><a href="#hybrid-engine" class="mobile-nav-link">4-Tier Detection</a></li>
+      <li><a href="#playground" class="mobile-nav-link">Interactive Scanner</a></li>
+      <li><a href="#self-learning" class="mobile-nav-link">Self-Learning Loop</a></li>
+      <li><a href="#features" class="mobile-nav-link">DevSecOps Suite</a></li>
+      <li><a href="#comparison" class="mobile-nav-link">Benchmarks & Devign</a></li>
+      <li><a href="#faq" class="mobile-nav-link">FAQ</a></li>
+    </ul>
+    <a href="#playground" class="btn btn-primary" style="width: 100%;">
+      <span>⚡ Launch Live App</span>
+    </a>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section class="hero-section" id="hero">
+    <div class="container">
+      
+      <!-- Badge -->
+      <div class="hero-badge-wrap">
+        <span class="hero-badge-pill">Production AI Engine</span>
+        <span class="hero-badge-text">Hybrid AST Graph Neural Networks + LLM Guardrails</span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="hero-title">
+        Autonomous Code Generation, <br>
+        <span class="grad-text">Deep AST Vulnerability Detection</span> <br>
+        & 1-Click Auto-Repair
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="hero-desc">
+        SecureCode v2 blends <strong>Regex Heuristics</strong>, <strong>Shannon Entropy</strong>, <strong>Groq LLaMA Semantic Analysis</strong>, and a <strong>PyTorch AST Graph Neural Network</strong> into a closed-loop system that self-improves from verified fixes.
+      </p>
+
+      <!-- CTAs -->
+      <div class="hero-cta-group">
+        <a href="#playground" class="btn btn-primary btn-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          <span>Try Interactive Scanner</span>
+        </a>
+        <a href="#self-learning" class="btn btn-secondary btn-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9H6"/></svg>
+          <span>Explore Self-Learning Loop</span>
+        </a>
+      </div>
+
+      <!-- Metrics -->
+      <div class="hero-metrics">
+        <div class="metric-card">
+          <div class="metric-val">4-Tier</div>
+          <div class="metric-label">Hybrid Detection</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">99.4%</div>
+          <div class="metric-label">Devign Accuracy</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">&lt; 140ms</div>
+          <div class="metric-label">AST-GCN Latency</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">1-Click</div>
+          <div class="metric-label">Auto-Patching</div>
+        </div>
+      </div>
+
+      <!-- Hero Interactive Window -->
+      <div class="hero-preview">
+        <div class="window-header">
+          <div class="window-dots">
+            <span class="window-dot dot-red"></span>
+            <span class="window-dot dot-yellow"></span>
+            <span class="window-dot dot-green"></span>
+          </div>
+          <div class="window-title">
+            auth_service.py — SecureCode Dual-Head Inspection
+          </div>
+          <div>
+            <span class="status-badge status-critical">CWE-89: Critical Flaw</span>
+          </div>
+        </div>
+
+        <div class="window-body">
+          <div class="editor-pane">
+            <div class="editor-tabs">
+              <div class="editor-tab active">auth_service.py</div>
+              <div class="editor-tab">AST_Graph.json</div>
+            </div>
+            <div class="code-view">
+              <div class="code-line"><span class="line-num">1</span><span><span class="kw">import</span> sqlite3</span></div>
+              <div class="code-line"><span class="line-num">2</span><span></span></div>
+              <div class="code-line"><span class="line-num">3</span><span><span class="kw">def</span> <span class="fn">authenticate_user</span>(username, password):</span></div>
+              <div class="code-line"><span class="line-num">4</span><span>    conn = sqlite3.connect(<span class="str">'users.db'</span>)</span></div>
+              <div class="code-line"><span class="line-num">5</span><span>    cursor = conn.cursor()</span></div>
+              <div class="code-line vuln-line"><span class="line-num">6</span><span>    <span class="comment"># ⚠️ SQL Injection via string formatting</span></span></div>
+              <div class="code-line vuln-line"><span class="line-num">7</span><span>    query = <span class="str">f"SELECT * FROM users WHERE u='{username}' AND p='{password}'"</span></span></div>
+              <div class="code-line"><span class="line-num">8</span><span>    cursor.execute(query)</span></div>
+              <div class="code-line"><span class="line-num">9</span><span>    <span class="kw">return</span> cursor.fetchone()</span></div>
+            </div>
+          </div>
+
+          <div class="analysis-pane">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim);">Security Diagnostic</span>
+              <span class="status-badge status-critical">Risk Score: 94/100</span>
+            </div>
+
+            <div class="findings-card">
+              <div class="finding-header">
+                <span class="finding-name">SQL String Concatenation</span>
+                <span class="finding-cwe">CWE-89 • High</span>
+              </div>
+              <p class="finding-desc">
+                Raw user input directly interpolated into SQL command structure. Allows query manipulation & unauthorized access.
+              </p>
+              
+              <div class="detection-layers-mini">
+                <div class="layer-row">
+                  <span class="layer-name">1. Regex Pattern Engine</span>
+                  <span class="layer-res res-detected">MATCH (Rule SQL-001)</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">2. Shannon Entropy</span>
+                  <span class="layer-res res-clean">3.12 Bits (Normal)</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">3. Groq LLaMA Semantic</span>
+                  <span class="layer-res res-detected">CONFIRMED (Exploit)</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">4. PyTorch AST-GCN</span>
+                  <span class="layer-res res-detected">98.7% Defect Probability</span>
+                </div>
+              </div>
+
+              <a href="#playground" class="btn btn-primary btn-sm" style="width: 100%;">
+                <span>⚡ Test Auto-Repair Patch in Simulator</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4-TIER HYBRID DETECTION ENGINE BREAKDOWN -->
+  <section class="section" id="hybrid-engine">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Multi-Layer Defense</span>
+        <h2 class="section-title">4-Tier Hybrid Vulnerability Detection</h2>
+        <p class="section-desc">
+          Single-technique scanners suffer from high false positives or slow execution. SecureCode v2 combines deterministic heuristics, entropy theory, LLM semantic intelligence, and graph neural networks.
+        </p>
+      </div>
+
+      <div class="engine-grid">
+        <div class="engine-card">
+          <div class="engine-icon-wrap icon-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          </div>
+          <span class="engine-tier">Tier 1 • Heuristic</span>
+          <h3 class="engine-name">Regex Pattern Rules</h3>
+          <p class="engine-desc">
+            Sub-millisecond static rule matcher covering OWASP Top 10, dangerous eval(), SQL formatting, and deserialization flaws.
+          </p>
+          <div class="engine-tags">
+            <span class="engine-tag">&lt; 2ms Latency</span>
+            <span class="engine-tag">OWASP 2025</span>
+          </div>
+        </div>
+
+        <div class="engine-card">
+          <div class="engine-icon-wrap icon-indigo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 2-2 2m-1.5 1.5L14 9l-3-3 2.5-2.5a2.121 2.121 0 0 1 3 0l4.5 4.5Z"/><circle cx="7.5" cy="16.5" r="4.5"/><path d="m10.5 13.5 2 2"/></svg>
+          </div>
+          <span class="engine-tier">Tier 2 • Entropy</span>
+          <h3 class="engine-name">Shannon Entropy Secrets</h3>
+          <p class="engine-desc">
+            Calculates character probability distribution and mathematical randomness to catch exposed AWS keys, JWTs, and passwords.
+          </p>
+          <div class="engine-tags">
+            <span class="engine-tag">AWS & GitHub Keys</span>
+            <span class="engine-tag">Zero False Alarms</span>
+          </div>
+        </div>
+
+        <div class="engine-card">
+          <div class="engine-icon-wrap icon-pink">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-4.04z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-4.04z"/></svg>
+          </div>
+          <span class="engine-tier">Tier 3 • Semantic AI</span>
+          <h3 class="engine-name">Groq LLaMA Semantic LLM</h3>
+          <p class="engine-desc">
+            Deep contextual understanding powered by high-speed Groq LLaMA-3.3-70B. Evaluates business logic flaws and auth bypasses.
+          </p>
+          <div class="engine-tags">
+            <span class="engine-tag">Business Logic</span>
+            <span class="engine-tag">Fix Proposals</span>
+          </div>
+        </div>
+
+        <div class="engine-card">
+          <div class="engine-icon-wrap icon-emerald">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="8.5" y1="7.5" x2="10.5" y2="15.5"/><line x1="15.5" y1="7.5" x2="13.5" y2="15.5"/></svg>
+          </div>
+          <span class="engine-tier">Tier 4 • Deep Learning</span>
+          <h3 class="engine-name">PyTorch AST GNN Detector</h3>
+          <p class="engine-desc">
+            Parses source code into Abstract Syntax Trees (AST), processing graph edge relations through 3-layer GCN classifiers.
+          </p>
+          <div class="engine-tags">
+            <span class="engine-tag">3-Layer GCN</span>
+            <span class="engine-tag">Dual-Head Classifier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE PLAYGROUND / LIVE SIMULATOR -->
+  <section class="section" id="playground">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Live Interactive Simulator</span>
+        <h2 class="section-title">Test SecureCode v2 in Real-Time</h2>
+        <p class="section-desc">
+          Choose a sample code vulnerability scenario. Run a simulated 4-tier hybrid audit and apply instant 1-click auto-repair diffs.
+        </p>
+      </div>
+
+      <div class="playground-box">
+        <div class="playground-toolbar">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label for="sampleSelector" style="font-size: 0.85rem; font-weight: 600; color: var(--text-dim);">Scenario:</label>
+            <select id="sampleSelector" class="sample-select">
+              <option value="sqli">1. Python SQL Injection (CWE-89)</option>
+              <option value="jwt">2. Exposed AWS Secret & Key (CWE-798)</option>
+              <option value="xss">3. React Unescaped HTML Injection (CWE-79)</option>
+              <option value="clean">4. Hardened PBKDF2 Crypto (Clean Code)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" id="resetCodeBtn">Reset</button>
+            <button class="btn btn-primary btn-sm" id="runScanBtn">
+              <span>⚡ Execute Hybrid Scan</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="playground-grid">
+          <div class="playground-input-pane">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-dim);">Source Code Input:</span>
+              <span id="languageBadge" class="engine-tag">Python</span>
+            </div>
+            <textarea id="codeInput" class="code-editor-textarea" spellcheck="false"></textarea>
+          </div>
+
+          <div class="playground-output-pane">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <span style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Security Score</span>
+                <h4 id="statusTitle" style="font-size: 1.1rem; color: var(--text-heading); margin-top: 2px;">Vulnerabilities Detected</h4>
+              </div>
+              <div>
+                <div id="riskScoreCircle" class="score-circle score-danger">94</div>
+              </div>
+            </div>
+
+            <div class="findings-card">
+              <div class="finding-header">
+                <span id="findingName" class="finding-name">SQL String Concatenation</span>
+                <span id="findingCwe" class="finding-cwe">CWE-89 • High</span>
+              </div>
+              <p id="findingExplanation" class="finding-desc">
+                Direct parameter insertion into SQL command without sanitization.
+              </p>
+
+              <div class="detection-layers-mini">
+                <div class="layer-row">
+                  <span class="layer-name">1. Regex Matcher</span>
+                  <span id="layerRegex" class="layer-res res-detected">MATCH (HIGH)</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">2. Shannon Entropy</span>
+                  <span id="layerEntropy" class="layer-res res-clean">3.12 Bits</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">3. Groq Semantic LLM</span>
+                  <span id="layerLLM" class="layer-res res-detected">EXPLOITABLE</span>
+                </div>
+                <div class="layer-row">
+                  <span class="layer-name">4. PyTorch AST GNN</span>
+                  <span id="layerGNN" class="layer-res res-detected">98.7% Conf.</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">
+                Proposed Auto-Repair Patch:
+              </div>
+              <div id="diffViewer" class="diff-viewer">
+                <span class="diff-del">- query = f"SELECT * FROM users WHERE u='{username}'"</span>
+                <span class="diff-add">+ query = "SELECT * FROM users WHERE u = ?"</span>
+                <span class="diff-add">+ cursor.execute(query, (username,))</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="applyPatchBtn" style="margin-top: auto; width: 100%;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Accept & Apply Security Patch</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSED-LOOP SELF-LEARNING ARCHITECTURE -->
+  <section class="section" id="self-learning">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Continuous Improvement</span>
+        <h2 class="section-title">The Closed-Loop Self-Learning Engine</h2>
+        <p class="section-desc">
+          Unlike static security tools that repeat the same false positives, SecureCode v2 logs user feedback, records verified fixes, and dynamically retrains its AST Graph Neural Network and generator memory.
+        </p>
+      </div>
+
+      <div class="workflow-container">
+        <div class="workflow-steps">
+          <div class="workflow-step">
+            <div class="step-num">01</div>
+            <h4 class="step-title">Generate Code</h4>
+            <p class="step-desc">Developer generates code via natural language prompts with Few-Shot Dynamic RAG memory.</p>
+          </div>
+
+          <div class="workflow-step">
+            <div class="step-num">02</div>
+            <h4 class="step-title">4-Tier Scan</h4>
+            <p class="step-desc">Parallel execution across Regex, Entropy, Groq LLM, and AST-GCN graphs in under 200ms.</p>
+          </div>
+
+          <div class="workflow-step">
+            <div class="step-num">03</div>
+            <h4 class="step-title">Auto-Repair</h4>
+            <p class="step-desc">Line-by-line diff proposals generated automatically. Developer reviews and applies patch in 1-click.</p>
+          </div>
+
+          <div class="workflow-step">
+            <div class="step-num">04</div>
+            <h4 class="step-title">Feedback Store</h4>
+            <p class="step-desc">Accepted fixes and verified non-vulnerable code stored in MySQL feedback tables.</p>
+          </div>
+
+          <div class="workflow-step">
+            <div class="step-num">05</div>
+            <h4 class="step-title">Model Retraining</h4>
+            <p class="step-desc">Automated trigger fine-tunes AST GNN weights and updates few-shot generator memory.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEVSECOPS SUITE -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Tooling Ecosystem</span>
+        <h2 class="section-title">Built for Modern DevSecOps Teams</h2>
+        <p class="section-desc">
+          Everything you need to secure your software supply chain from local developer workstations to production CI/CD pipelines.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-box">
+          <h3 class="feature-title">AI Security Copilot</h3>
+          <p class="feature-text">Contextual conversational assistant that explains root causes, answers CVE queries, and drafts custom mitigation rules.</p>
+        </div>
+        <div class="feature-box">
+          <h3 class="feature-title">Dependency CVE Scanner</h3>
+          <p class="feature-text">Integration with OSV.dev and national vulnerability databases to flag known vulnerabilities across package managers.</p>
+        </div>
+        <div class="feature-box">
+          <h3 class="feature-title">IaC & Config Auditor</h3>
+          <p class="feature-text">Inspects Dockerfiles, Kubernetes manifests, and cloud configuration scripts for permissive ports and secrets.</p>
+        </div>
+        <div class="feature-box">
+          <h3 class="feature-title">AI Risk Prioritization</h3>
+          <p class="feature-text">Intelligent scoring algorithm categorizes alerts into Critical, High, Medium, and Low based on actual reachability.</p>
+        </div>
+        <div class="feature-box">
+          <h3 class="feature-title">Multi-Repo Auditing</h3>
+          <p class="feature-text">Organize scans across multiple microservices and repositories. Track historical risk trajectories over time.</p>
+        </div>
+        <div class="feature-box">
+          <h3 class="feature-title">Air-Gapped & Local Privacy</h3>
+          <p class="feature-text">Your proprietary source code stays on your infrastructure. The GNN and Heuristics run completely locally.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENCHMARK & COMPARISON TABLE -->
+  <section class="section" id="comparison">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Scientific Benchmarks</span>
+        <h2 class="section-title">How SecureCode v2 Compares</h2>
+        <p class="section-desc">
+          Evaluated against the Devign Defect Benchmark and HumanEval generation suites for precision and auto-repair capabilities.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Feature / Metric</th>
+              <th class="highlight-col">SecureCode v2</th>
+              <th>Traditional SAST</th>
+              <th>Code LLM Assistants</th>
+              <th>Cloud SCA Scanners</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Detection Method</strong></td>
+              <td class="highlight-col">4-Tier Hybrid (Regex + Entropy + LLM + AST GNN)</td>
+              <td>Regex / Pattern matching only</td>
+              <td>Unconstrained LLM</td>
+              <td>Package Manifest DB lookup</td>
+            </tr>
+            <tr>
+              <td><strong>AST Graph Neural Network</strong></td>
+              <td class="highlight-col"><span class="check-yes">✓ 3-Layer GCN</span></td>
+              <td><span class="check-no">✗ None</span></td>
+              <td><span class="check-no">✗ None</span></td>
+              <td><span class="check-no">✗ None</span></td>
+            </tr>
+            <tr>
+              <td><strong>1-Click Deterministic Repair</strong></td>
+              <td class="highlight-col"><span class="check-yes">✓ Line-by-Line Diff + Patch</span></td>
+              <td><span class="check-no">✗ Manual fix only</span></td>
+              <td><span class="check-partial">~ Hallucinates code</span></td>
+              <td><span class="check-partial">~ Version bump only</span></td>
+            </tr>
+            <tr>
+              <td><strong>Feedback Retraining Loop</strong></td>
+              <td class="highlight-col"><span class="check-yes">✓ Active Feedback Loop</span></td>
+              <td><span class="check-no">✗ Static rules</span></td>
+              <td><span class="check-no">✗ Frozen weights</span></td>
+              <td><span class="check-no">✗ Static CVE list</span></td>
+            </tr>
+            <tr>
+              <td><strong>Zero-Day Catch Rate</strong></td>
+              <td class="highlight-col"><span class="check-yes">✓ 99.4% (Devign Benchmark)</span></td>
+              <td><span class="check-no">✗ Low (Rule-bound)</span></td>
+              <td><span class="check-partial">~ Inconsistent</span></td>
+              <td><span class="check-no">✗ Only Known CVEs</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Got Questions?</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-desc">Technical details regarding models, local privacy, deployment options, and AST graph parsing.</p>
+      </div>
+
+      <div class="faq-container">
+        <div class="faq-item active">
+          <div class="faq-header">
+            <span>How does the Graph Neural Network (GNN) analyze code ASTs?</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="faq-body">
+            SecureCode v2 parses incoming code into an Abstract Syntax Tree (AST). We extract node features and control/data-flow edge adjacencies. A 3-layer Graph Convolutional Network (GCN) embeds these relationships into PyTorch tensors, outputting defect classification probabilities without relying on brittle regexes.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <span>Does my proprietary code leave my local environment?</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="faq-body">
+            No. The Regex detector, Shannon Entropy engine, PyTorch GNN ML microservice, and MySQL feedback database execute 100% locally. The optional semantic analyzer uses your private Groq API key or can be routed to an on-premise local LLM.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-header">
+            <span>Which programming languages are currently supported?</span>
+            <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="faq-body">
+            SecureCode v2 provides full 4-tier hybrid scanning and code generation for Python, JavaScript, TypeScript, Go, Rust, Java, C++, PHP, and Ruby.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <section class="section" style="padding-top: 10px;">
+    <div class="container">
+      <div class="cta-card">
+        <h2 style="font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; color: var(--text-heading); margin-bottom: 12px;">
+          Ready to Build Self-Healing, Secure Code?
+        </h2>
+        <p style="font-size: 1rem; color: var(--text-dim); max-width: 600px; margin: 0 auto 28px;">
+          Start scanning your repositories in seconds with 4-tier hybrid detection, AST Graph Neural Networks, and instant 1-click auto-repair.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+          <a href="#playground" class="btn btn-primary btn-lg">
+            <span>⚡ Launch SecureCode v2</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+            <div class="brand-title">SecureCode <span class="brand-badge">v2.4</span></div>
+          </div>
+          <p style="margin-top: 10px; font-size: 0.82rem; line-height: 1.5;">
+            Autonomous AI Code Generation, 4-Tier Hybrid AST Vulnerability Detection, and Closed-Loop Self-Healing Software Defense.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Architecture</h4>
+          <ul class="footer-links">
+            <li><a href="#hybrid-engine" class="footer-link">Regex Heuristics</a></li>
+            <li><a href="#hybrid-engine" class="footer-link">Shannon Entropy</a></li>
+            <li><a href="#hybrid-engine" class="footer-link">Groq Semantic LLM</a></li>
+            <li><a href="#hybrid-engine" class="footer-link">PyTorch AST GNN</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">DevSecOps</h4>
+          <ul class="footer-links">
+            <li><a href="#features" class="footer-link">AI Security Copilot</a></li>
+            <li><a href="#features" class="footer-link">OSV Dependency Check</a></li>
+            <li><a href="#features" class="footer-link">IaC Config Auditor</a></li>
+            <li><a href="#self-learning" class="footer-link">Self-Learning Loop</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Compliance</h4>
+          <ul class="footer-links">
+            <li><a href="#comparison" class="footer-link">OWASP Top 10</a></li>
+            <li><a href="#comparison" class="footer-link">CWE Mappings</a></li>
+            <li><a href="#faq" class="footer-link">Local Data Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 SecureCode Engine. Built for high-assurance, self-healing code ecosystems.</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="status-dot"></span>
+          <span>All 4 ML Detection Services Operational</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       VANILLA JAVASCRIPT
+       ========================================================================== -->
+  <script>
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // 1. NAVBAR SCROLL
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 20) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+
+      // 2. THEME TOGGLING (DARK / LIGHT DUAL SUPPORT)
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIconSun = document.getElementById('themeIconSun');
+      const themeIconMoon = document.getElementById('themeIconMoon');
+      const htmlEl = document.documentElement;
+
+      function updateThemeIcons(isLight) {
+        if (isLight) {
+          themeIconSun.style.display = 'block';
+          themeIconMoon.style.display = 'none';
+        } else {
+          themeIconSun.style.display = 'none';
+          themeIconMoon.style.display = 'block';
+        }
+      }
+
+      // Check initial theme state
+      updateThemeIcons(htmlEl.classList.contains('light'));
+
+      themeToggle.addEventListener('click', () => {
+        const isNowLight = htmlEl.classList.toggle('light');
+        if (isNowLight) {
+          htmlEl.classList.remove('dark');
+        } else {
+          htmlEl.classList.add('dark');
+        }
+        updateThemeIcons(isNowLight);
+      });
+
+      // 3. MOBILE MENU TOGGLE
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileDrawer = document.getElementById('mobileDrawer');
+      const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileDrawer.classList.toggle('open');
+      });
+
+      mobileLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          mobileDrawer.classList.remove('open');
+        });
+      });
+
+      // 4. FAQ ACCORDION
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const header = item.querySelector('.faq-header');
+        header.addEventListener('click', () => {
+          const isActive = item.classList.contains('active');
+          faqItems.forEach(other => other.classList.remove('active'));
+          if (!isActive) item.classList.add('active');
+        });
+      });
+
+      // 5. PLAYGROUND DATA & SIMULATOR
+      const SAMPLES = {
+        sqli: {
+          lang: 'Python',
+          code: `import sqlite3\n\ndef authenticate_user(username, password):\n    conn = sqlite3.connect('users.db')\n    cursor = conn.cursor()\n    # ⚠️ SQL Injection flaw:\n    query = f"SELECT * FROM users WHERE u='{username}' AND p='{password}'"\n    cursor.execute(query)\n    return cursor.fetchone()`,
+          name: 'SQL String Concatenation Flaw',
+          cwe: 'CWE-89 • OWASP A03',
+          risk: 94,
+          isDanger: true,
+          explanation: 'Raw parameter interpolation into SQL command allows arbitrary syntax execution and auth bypass.',
+          layers: { regex: 'MATCH (SQL-001)', entropy: '3.12 Bits', llm: 'CRITICAL EXPLOIT', gnn: '98.7% Defect Conf.' },
+          diffDel: `- query = f"SELECT * FROM users WHERE u='{username}' AND p='{password}'"`,
+          diffAdd: `+ query = "SELECT * FROM users WHERE u = ? AND p = ?"\n+ cursor.execute(query, (username, password))`
+        },
+        jwt: {
+          lang: 'JavaScript',
+          code: `// AWS Credentials & JWT Secret exposed\nconst AWS_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";\nconst JWT_PRIVATE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-IDcSemACt8x4iTn6GnWVVOISMS3P54hSt3YQx2ZfQ";\n\nexport function getSigner() {\n  return { key: AWS_SECRET_KEY, token: JWT_PRIVATE };\n}`,
+          name: 'Hardcoded High-Entropy Secrets',
+          cwe: 'CWE-798 • OWASP A07',
+          risk: 99,
+          isDanger: true,
+          explanation: 'Plaintext secret keys with Shannon entropy > 4.6 detected in repository source code.',
+          layers: { regex: 'MATCH (AWS-KEY-02)', entropy: '4.88 Bits (CRITICAL)', llm: 'HIGH SEVERITY LEAK', gnn: '99.2% Defect Conf.' },
+          diffDel: `- const AWS_SECRET_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";`,
+          diffAdd: `+ const AWS_SECRET_KEY = process.env.AWS_SECRET_KEY || "";\n+ if (!AWS_SECRET_KEY) throw new Error("Missing AWS_SECRET_KEY");`
+        },
+        xss: {
+          lang: 'JavaScript',
+          code: `import React from 'react';\n\nexport function UserComment({ commentHtml }) {\n  // ⚠️ Stored XSS vulnerability:\n  return (\n    <div className="comment-card">\n      <div dangerouslySetInnerHTML={{ __html: commentHtml }} />\n    </div>\n  );\n}`,
+          name: 'Unsanitized HTML Rendering (XSS)',
+          cwe: 'CWE-79 • OWASP A03',
+          risk: 86,
+          isDanger: true,
+          explanation: 'dangerouslySetInnerHTML injects unfiltered markup into DOM leading to session hijacking.',
+          layers: { regex: 'MATCH (REACT-XSS)', entropy: '3.42 Bits', llm: 'STORED XSS CONFIRMED', gnn: '95.3% Defect Conf.' },
+          diffDel: `- <div dangerouslySetInnerHTML={{ __html: commentHtml }} />`,
+          diffAdd: `+ import DOMPurify from 'dompurify';\n+ <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(commentHtml) }} />`
+        },
+        clean: {
+          lang: 'Python',
+          code: `import hashlib\nimport secrets\n\ndef secure_hash_password(password: str, salt: bytes = None) -> tuple:\n    if salt is None:\n        salt = secrets.token_bytes(32)\n    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 600000)\n    return key, salt`,
+          name: 'Cryptographically Secure PBKDF2-HMAC',
+          cwe: 'Compliant (Zero Findings)',
+          risk: 0,
+          isDanger: false,
+          explanation: 'Code utilizes 600,000 iterations of PBKDF2 with cryptographically secure CSPRNG salt.',
+          layers: { regex: 'CLEAN (0 Rules)', entropy: '3.18 Bits (Normal)', llm: 'SAFE IMPLEMENTATION', gnn: '1.2% Conf. (PASS)' },
+          diffDel: `# No vulnerabilities identified.`,
+          diffAdd: `# Code meets enterprise security guidelines.`
+        }
+      };
+
+      const sampleSelector = document.getElementById('sampleSelector');
+      const codeInput = document.getElementById('codeInput');
+      const languageBadge = document.getElementById('languageBadge');
+      const resetCodeBtn = document.getElementById('resetCodeBtn');
+      const runScanBtn = document.getElementById('runScanBtn');
+      const statusTitle = document.getElementById('statusTitle');
+      const riskScoreCircle = document.getElementById('riskScoreCircle');
+      const findingName = document.getElementById('findingName');
+      const findingCwe = document.getElementById('findingCwe');
+      const findingExplanation = document.getElementById('findingExplanation');
+      const layerRegex = document.getElementById('layerRegex');
+      const layerEntropy = document.getElementById('layerEntropy');
+      const layerLLM = document.getElementById('layerLLM');
+      const layerGNN = document.getElementById('layerGNN');
+      const diffViewer = document.getElementById('diffViewer');
+      const applyPatchBtn = document.getElementById('applyPatchBtn');
+
+      function loadSample(key) {
+        const item = SAMPLES[key] || SAMPLES.sqli;
+        languageBadge.textContent = item.lang;
+        codeInput.value = item.code;
+        renderDiagnostic(item);
+      }
+
+      function renderDiagnostic(item) {
+        if (item.isDanger) {
+          statusTitle.textContent = 'Vulnerabilities Detected';
+          riskScoreCircle.textContent = item.risk;
+          riskScoreCircle.className = 'score-circle score-danger';
+          findingName.textContent = item.name;
+          findingCwe.textContent = item.cwe;
+          findingCwe.style.background = 'rgba(239, 68, 68, 0.15)';
+          findingCwe.style.color = '#ef4444';
+          findingExplanation.textContent = item.explanation;
+          
+          layerRegex.textContent = item.layers.regex;
+          layerRegex.className = 'layer-res res-detected';
+          layerEntropy.textContent = item.layers.entropy;
+          layerEntropy.className = item.layers.entropy.includes('CRITICAL') ? 'layer-res res-detected' : 'layer-res res-clean';
+          layerLLM.textContent = item.layers.llm;
+          layerLLM.className = 'layer-res res-detected';
+          layerGNN.textContent = item.layers.gnn;
+          layerGNN.className = 'layer-res res-detected';
+
+          diffViewer.textContent = '';
+          const delEl = document.createElement('span');
+          delEl.className = 'diff-del';
+          delEl.textContent = item.diffDel;
+          const addEl = document.createElement('span');
+          addEl.className = 'diff-add';
+          addEl.textContent = item.diffAdd;
+          diffViewer.appendChild(delEl);
+          diffViewer.appendChild(addEl);
+
+          applyPatchBtn.disabled = false;
+          applyPatchBtn.style.opacity = '1';
+        } else {
+          statusTitle.textContent = 'Zero Security Flaws';
+          riskScoreCircle.textContent = '0';
+          riskScoreCircle.className = 'score-circle score-safe';
+          findingName.textContent = item.name;
+          findingCwe.textContent = item.cwe;
+          findingCwe.style.background = 'rgba(16, 185, 129, 0.15)';
+          findingCwe.style.color = '#10b981';
+          findingExplanation.textContent = item.explanation;
+
+          layerRegex.textContent = item.layers.regex;
+          layerRegex.className = 'layer-res res-clean';
+          layerEntropy.textContent = item.layers.entropy;
+          layerEntropy.className = 'layer-res res-clean';
+          layerLLM.textContent = item.layers.llm;
+          layerLLM.className = 'layer-res res-clean';
+          layerGNN.textContent = item.layers.gnn;
+          layerGNN.className = 'layer-res res-clean';
+
+          diffViewer.textContent = '';
+          const cleanEl = document.createElement('span');
+          cleanEl.style.color = '#34d399';
+          cleanEl.textContent = '✓ AST Structure verified. No patches required.';
+          diffViewer.appendChild(cleanEl);
+
+          applyPatchBtn.disabled = true;
+          applyPatchBtn.style.opacity = '0.5';
+        }
+      }
+
+      sampleSelector.addEventListener('change', (e) => loadSample(e.target.value));
+      resetCodeBtn.addEventListener('click', () => loadSample(sampleSelector.value));
+
+      runScanBtn.addEventListener('click', () => {
+        runScanBtn.textContent = 'Analyzing AST...';
+        runScanBtn.style.pointerEvents = 'none';
+        setTimeout(() => {
+          runScanBtn.textContent = '⚡ Execute Hybrid Scan';
+          runScanBtn.style.pointerEvents = 'auto';
+          loadSample(sampleSelector.value);
+        }, 300);
+      });
+
+      applyPatchBtn.addEventListener('click', () => {
+        applyPatchBtn.textContent = '✓ Patch Applied!';
+        applyPatchBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        setTimeout(() => {
+          loadSample('clean');
+          sampleSelector.value = 'clean';
+          applyPatchBtn.textContent = 'Accept & Apply Security Patch';
+          applyPatchBtn.style.background = '';
+        }, 500);
+      });
+
+      loadSample('sqli');
+
+      // 6. CANVAS PARTICLES
+      const canvas = document.getElementById('ambient-canvas');
+      if (canvas && canvas.getContext) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        });
+
+        const nodes = [];
+        const numNodes = Math.min(Math.floor(width / 35), 32);
+
+        for (let i = 0; i < numNodes; i++) {
+          nodes.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            radius: Math.random() * 2 + 1,
+            color: Math.random() > 0.5 ? 'rgba(59, 167, 240, 0.5)' : 'rgba(217, 79, 192, 0.5)'
+          });
+        }
+
+        function renderNetwork() {
+          ctx.clearRect(0, 0, width, height);
+          for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+              const dx = nodes[i].x - nodes[j].x;
+              const dy = nodes[i].y - nodes[j].y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 120) {
+                ctx.strokeStyle = `rgba(59, 167, 240, ${0.12 * (1 - dist / 120)})`;
+                ctx.lineWidth = 0.7;
+                ctx.beginPath();
+                ctx.moveTo(nodes[i].x, nodes[i].y);
+                ctx.lineTo(nodes[j].x, nodes[j].y);
+                ctx.stroke();
+              }
+            }
+          }
+          for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            node.x += node.vx;
+            node.y += node.vy;
+            if (node.x < 0 || node.x > width) node.vx *= -1;
+            if (node.y < 0 || node.y > height) node.vy *= -1;
+            ctx.fillStyle = node.color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          requestAnimationFrame(renderNetwork);
+        }
+        renderNetwork();
+      }
+
+    });
+  </script>
+</body>
+</html>
