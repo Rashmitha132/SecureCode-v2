@@ -81,33 +81,39 @@ else:
     print(">>> [SecureCode] PyTorch GNN ML Service is ACTIVE (Port 5001)")
 
 # -----------------------------------------------------------------------------
-# 2. SERVE REACT PRODUCTION BUILD ON PORT 5174
+# 2. STANDALONE PRODUCTION BUNDLE INLINER
 # -----------------------------------------------------------------------------
-class QuietHTTPHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=FRONTEND_DIST, **kwargs)
-    
-    def end_headers(self):
-        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
-        super().end_headers()
+def get_inlined_react_html():
+    assets_dir = os.path.join(FRONTEND_DIST, "assets")
+    css_code = ""
+    js_code = ""
+    if os.path.exists(assets_dir):
+        for f in os.listdir(assets_dir):
+            full_p = os.path.join(assets_dir, f)
+            if f.endswith(".css"):
+                with open(full_p, "r", encoding="utf-8") as file:
+                    css_code += file.read() + "\n"
+            elif f.endswith(".js"):
+                with open(full_p, "r", encoding="utf-8") as file:
+                    js_code += file.read() + "\n"
 
-    def log_message(self, format, *args):
-        pass
-
-def start_static_server():
-    try:
-        socketserver.TCPServer.allow_reuse_address = True
-        with socketserver.TCPServer(("0.0.0.0", STATIC_PORT), QuietHTTPHandler) as httpd:
-            httpd.serve_forever()
-    except Exception:
-        pass
-
-if not is_port_open(STATIC_PORT):
-    t = threading.Thread(target=start_static_server, daemon=True)
-    t.start()
-    time.sleep(0.6)
+    return f"""<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureCode — AI Code Security</title>
+    <style>
+      {css_code}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      {js_code}
+    </script>
+  </body>
+</html>"""
 
 # -----------------------------------------------------------------------------
 # 3. STREAMLIT EMBEDDED VIEWPORT (100% EXACT REACT DESIGN)
@@ -121,12 +127,13 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* 1. Hide all Streamlit default headers, toolbars, and footers */
-    #MainMenu, 
+    /* 1. Hide Streamlit Header, Footer, Toolbar, and Running Status */
     header, 
-    header[data-testid="stHeader"], 
     footer, 
+    #MainMenu, 
+    [data-testid="stHeader"], 
     [data-testid="stSidebar"], 
+    [data-testid="collapsedControl"], 
     [data-testid="stToolbar"], 
     [data-testid="stDecoration"],
     [data-testid="stStatusWidget"] {
@@ -168,8 +175,9 @@ st.markdown("""
         padding: 0 !important;
     }
 
-    /* 3. Lock iframe fixed to all 4 edges of the viewport */
-    iframe {
+    /* 3. Lock iframe and content fixed to all 4 edges of the viewport */
+    iframe,
+    div.stCustomComponentV1 iframe {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
@@ -185,6 +193,5 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Mount the complete React application fixed edge-to-edge with cache-buster
-components.iframe(f"http://localhost:{STATIC_PORT}/?t={int(time.time())}", scrolling=True)
-
+# Mount the complete React application directly inside Streamlit
+components.html(get_inlined_react_html(), height=1000, scrolling=True)
