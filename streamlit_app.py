@@ -36,13 +36,16 @@ if not os.path.exists(FRONTEND_DIST) or not os.path.exists(os.path.join(FRONTEND
     except Exception as e:
         print(f"[SecureCode] Frontend build note: {e}")
 
+import socket
+
 # -----------------------------------------------------------------------------
 # 1. AUTO-START BACKEND SERVICES IN BACKGROUND
 # -----------------------------------------------------------------------------
 def is_port_open(port):
     try:
-        urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=0.8)
-        return True
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.3)
+            return s.connect_ex(("127.0.0.1", port)) == 0
     except Exception:
         return False
 
@@ -50,15 +53,21 @@ def is_port_open(port):
 if not is_port_open(4000):
     try:
         subprocess.Popen(["node", "index.js"], cwd=CODE_SCAN_DIR, shell=True)
+        print(">>> [SecureCode] Connected to Node.js Backend & MySQL Database (Port 4000)")
     except Exception as e:
         print(f"[SecureCode] Node backend launch note: {e}")
+else:
+    print(">>> [SecureCode] Node.js Backend & MySQL Database is ACTIVE (Port 4000)")
 
 # Start ML service on port 5001 if not active
 if not is_port_open(5001):
     try:
-        subprocess.Popen(["python", "app.py"], cwd=ML_SERVICE_DIR, shell=True)
+        subprocess.Popen([sys.executable, "app.py"], cwd=ML_SERVICE_DIR, shell=True)
+        print(">>> [SecureCode] Connected to PyTorch GNN ML Service (Port 5001)")
     except Exception as e:
         print(f"[SecureCode] ML Service launch note: {e}")
+else:
+    print(">>> [SecureCode] PyTorch GNN ML Service is ACTIVE (Port 5001)")
 
 # -----------------------------------------------------------------------------
 # 2. SERVE REACT PRODUCTION BUILD ON PORT 5174
