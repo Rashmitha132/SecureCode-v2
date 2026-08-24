@@ -3062,25 +3062,57 @@ export default function App() {
     }, 50);
   }
 
-  async function handleScanWithCode(codeToScan) {
+  async function handleScanWithCode(codeToScan, sourceLabel = 'AI Generated Code') {
     if (!codeToScan.trim() || scanning) return;
     setScanning(true);
     setError(null);
     setScanDurationMs(null);
     const startedAt = Date.now();
     try {
-      const res = await fetch(`${API_URL}/scan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToScan, entropyEnabled: checks.secrets }),
-      });
-      if (!res.ok) throw new Error(`Scan failed (${res.status})`);
-      const data = await res.json();
-      setResults(data);
+      let scanData = null;
+      try {
+        const res = await fetch(`${API_URL}/scan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: codeToScan, entropyEnabled: checks.secrets }),
+        });
+        if (res.ok) {
+          scanData = await res.json();
+        }
+      } catch (netErr) {
+        // Fallback to client-side scanner on network/cloud isolation
+      }
+
+      if (!scanData) {
+        scanData = runClientSideScan(codeToScan);
+      }
+
+      setResults(scanData);
       setScanDurationMs(Date.now() - startedAt);
+
+      // Save scan to local history for instant display in Scan History
+      try {
+        const localHist = JSON.parse(localStorage.getItem('sc_local_history') || '[]');
+        const newHistEntry = {
+          id: Date.now(),
+          scanned_at: new Date().toISOString(),
+          total_findings: scanData.totalFindings || 0,
+          high_severity: scanData.highSeverity || 0,
+          medium_severity: scanData.mediumSeverity || 0,
+          low_severity: scanData.lowSeverity || 0,
+          findings: scanData.findings || [],
+          risk_score: scanData.riskScore || 0,
+          risk_level: scanData.riskLevel || 'Low',
+          source_type: sourceLabel
+        };
+        localHist.unshift(newHistEntry);
+        localStorage.setItem('sc_local_history', JSON.stringify(localHist.slice(0, 100)));
+        setHistory(localHist);
+      } catch (e) {}
+
       fetchHistory();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Scan encountered an error');
     } finally {
       setScanning(false);
     }
