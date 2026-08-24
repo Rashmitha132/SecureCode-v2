@@ -251,7 +251,12 @@ SecureCode is engineered on a multi-tiered AI architecture combining custom Grap
 * **Explain Security Findings:** Break down detected vulnerabilities with severity metrics connected to official **OWASP Top 10** and **MITRE CWE** standards.
 * **Generate Automated Fixes:** Provide verified, copy-ready code patches and 1-click remediation diffs.
 
-Feel free to paste your code in **Code Scan** or ask me to inspect your current scan findings!`,citations:[{id:`SecureCode-Core`,title:`Project Security Auditor`,owasp:`Application Defense`,severity:`Info`}]};if(r.includes(`recent`)||r.includes(`last scan`)||r.includes(`history`)||r.includes(`previous scan`)){if(!o)return{answer:`📋 **No Recent Scans Found**
+Feel free to paste your code in **Code Scan** or ask me to inspect your current scan findings!`,citations:[{id:`SecureCode-Core`,title:`Project Security Auditor`,owasp:`Application Defense`,severity:`Info`}]};if(/\b(generate|create|write|synthesize|build)\s+(a\s+|an\s+|some\s+)?(code|program|function|script|app|backend|api|auth|login)\b/i.test(r)||r.includes(`generate code`)||r.includes(`write code`)||r.includes(`create code`)||r.includes(`help me to generate code`)||r.includes(`help me generate code`)||r.includes(`can you generate`)||r.includes(`can u generate`))return{answer:`💡 **I cannot generate new code directly in this Copilot chat.** For creating new code from scratch, please use our **Generate Code** tab in the sidebar!
+
+### 🚀 Recommended Workflow:
+1. Go to the **Generate Code** tab to generate secure production code for any feature (JWT auth, database queries, APIs, etc.).
+2. Click **'Analyze in Code Scan'** to inspect the code with our AST-GNN security detector.
+3. Once scanned, you can return here and ask me to **inspect the findings or explain how to fix any detected vulnerabilities**!`,citations:[{id:`GEN-GUIDE`,title:`Secure Code Synthesizer`,owasp:`Feature Guidance`,severity:`Info`}]};if(r.includes(`recent`)||r.includes(`last scan`)||r.includes(`history`)||r.includes(`previous scan`)){if(!o)return{answer:`📋 **No Recent Scans Found**
 
 You haven't run any scans in this session yet. Head over to the **Code Scan** tab to paste a snippet or upload a file, and I will track all your findings right here!`,citations:[{id:`SCAN-INFO`,title:`Scan Engine`,owasp:`Active Session`,severity:`Info`}]};let e=o.findings||[],t=Math.max(0,100-(o.risk_score||o.riskScore||0)),n=o.risk_level||o.riskLevel||`Low`,r=o.total_findings??e.length,i=`📊 **Here is the summary of your most recent scan:**
 

@@ -414,7 +414,27 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 3. Recent Scan Inquiries
+    // 3. Code Generation Request Inquiry ("can u help me to generate code", "write code for me", etc.)
+    const isGenCodeQuery =
+      /\b(generate|create|write|synthesize|build)\s+(a\s+|an\s+|some\s+)?(code|program|function|script|app|backend|api|auth|login)\b/i.test(qLower) ||
+      qLower.includes('generate code') ||
+      qLower.includes('write code') ||
+      qLower.includes('create code') ||
+      qLower.includes('help me to generate code') ||
+      qLower.includes('help me generate code') ||
+      qLower.includes('can you generate') ||
+      qLower.includes('can u generate');
+
+    if (isGenCodeQuery) {
+      return {
+        answer: "💡 **I cannot generate new code directly in this Copilot chat.** For creating new code from scratch, please use our **Generate Code** tab in the sidebar!\n\n### 🚀 Recommended Workflow:\n1. Go to the **Generate Code** tab to generate secure production code for any feature (JWT auth, database queries, APIs, etc.).\n2. Click **'Analyze in Code Scan'** to inspect the code with our AST-GNN security detector.\n3. Once scanned, you can return here and ask me to **inspect the findings or explain how to fix any detected vulnerabilities**!",
+        citations: [
+          { id: 'GEN-GUIDE', title: 'Secure Code Synthesizer', owasp: 'Feature Guidance', severity: 'Info' }
+        ]
+      };
+    }
+
+    // 4. Recent Scan Inquiries
     if (qLower.includes('recent') || qLower.includes('last scan') || qLower.includes('history') || qLower.includes('previous scan')) {
       if (!recentScan) {
         return {

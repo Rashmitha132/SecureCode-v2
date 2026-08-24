@@ -489,6 +489,17 @@ async function askSecurityCopilot({
     };
   }
 
+  // 1b. Code Generation Request Inquiry
+  if (/\b(generate|create|write|synthesize|build)\s+(a\s+|an\s+|some\s+)?(code|program|function|script|app|backend|api|auth|login)\b/i.test(cleanQuery) || /generate code|write code|create code/i.test(cleanQuery)) {
+    return {
+      answer: "💡 **I cannot generate new code directly in this Copilot chat.** For creating new code from scratch, please use our **Generate Code** tab in the sidebar!\n\n### 🚀 Recommended Workflow:\n1. Go to the **Generate Code** tab to generate secure production code for any feature (JWT auth, database queries, APIs, etc.).\n2. Click **'Analyze in Code Scan'** to inspect the code with our AST-GNN security detector.\n3. Once scanned, you can return here and ask me to **inspect the findings or explain how to fix any detected vulnerabilities**!",
+      citations: [
+        { id: "GEN-GUIDE", title: "Secure Code Synthesizer", owasp: "Feature Guidance", severity: "Info" }
+      ],
+      suggestedActions: ["Go to Generate Code", "Audit My Scan Findings", "Review My Scanned Code"]
+    };
+  }
+
   // 2. Strict Project & Code Scope Check: Reject completely unrelated non-coding queries
   if (!isProjectSpecificQuery(cleanQuery, codeContext, scanFindings)) {
     return {
