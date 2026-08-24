@@ -509,20 +509,25 @@ export default function SecurityCopilotView({ results, code, goToNav }) {
       };
     }
 
-    // 6. Check for off-topic / unrelated queries to strictly decline
+    // 6. Strict Project Scope Enforcement: Reject general knowledge & off-topic questions
+    const isUnrelatedTopic = 
+      /^(who is|what is the capital|how to cook|recipe|weather|tell me a joke|write a poem|sing a song|movie|sports|cricket|football|president|prime minister|capital of|translate|story|essay on|meaning of life|who won)/i.test(qLower) ||
+      /\b(joke|poem|song|recipe|weather|president|prime minister|cricket|football|movie|news|capital city)\b/i.test(qLower);
+
     const allowedSecurityTerms = [
       'vulnerabilit', 'fix', 'patch', 'remediat', 'scan', 'finding', 'cwe', 'cve', 'owasp',
       'code', 'secret', 'key', 'token', 'sql', 'injection', 'xss', 'cors', 'auth', 'password',
       'secure', 'security', 'step', 'how to', 'how will', 'error', 'bug', 'leak', 'file', 'script',
       'project', 'repair', 'mitigat', 'protect', 'sanitize', 'audit', 'result', 'model', 'gnn',
-      'dataset', 'training', 'loss', 'python', 'javascript', 'java', 'c++', 'ast', 'entropy', 'eval'
+      'dataset', 'training', 'loss', 'python', 'javascript', 'java', 'c++', 'ast', 'entropy', 'eval',
+      'inspect', 'review', 'check', 'remediate', 'patching'
     ];
 
-    const hasSecurityIntent = allowedSecurityTerms.some(t => qLower.includes(t)) || Boolean(code);
+    const hasSecurityIntent = !isUnrelatedTopic && allowedSecurityTerms.some(t => qLower.includes(t));
 
     if (!hasSecurityIntent) {
       return {
-        answer: "🔒 **Project Scope Policy**\n\nI am fine-tuned exclusively to audit your **SecureCode project, explain its ML/GenAI architecture, inspect scanned code, and generate vulnerability patches**.\n\nI cannot assist with general knowledge, jokes, or non-security inquiries.\n\n*Please ask me about your scanned code, scan findings, or how the SecureCode model was built!*",
+        answer: "🔒 **Project Scope Policy**\n\nI am fine-tuned exclusively to audit your **SecureCode project, explain its ML/GenAI architecture, inspect scanned code, and generate vulnerability patches**.\n\nI cannot assist with general knowledge, trivia, or non-security inquiries.\n\n*Please ask me about your scanned code, vulnerability findings, or how the SecureCode model was built!*",
         citations: []
       };
     }
