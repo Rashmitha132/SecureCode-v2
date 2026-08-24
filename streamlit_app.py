@@ -49,15 +49,26 @@ def is_port_open(port):
     except Exception:
         return False
 
-# Start Node backend on port 4000 if not active
+# Start Backend on port 4000 if not active
 if not is_port_open(4000):
+    started = False
     try:
         subprocess.Popen(["node", "index.js"], cwd=CODE_SCAN_DIR, shell=True)
-        print(">>> [SecureCode] Connected to Node.js Backend & MySQL Database (Port 4000)")
-    except Exception as e:
-        print(f"[SecureCode] Node backend launch note: {e}")
+        time.sleep(0.6)
+        if is_port_open(4000):
+            started = True
+            print(">>> [SecureCode] Connected to Node.js Backend & MySQL Database (Port 4000)")
+    except Exception:
+        pass
+
+    if not started and not is_port_open(4000):
+        try:
+            subprocess.Popen([sys.executable, "app.py"], cwd=ML_SERVICE_DIR, shell=True)
+            print(">>> [SecureCode] Connected to Unified Python AI Backend (Port 4000)")
+        except Exception as e:
+            print(f"[SecureCode] Python backend launch note: {e}")
 else:
-    print(">>> [SecureCode] Node.js Backend & MySQL Database is ACTIVE (Port 4000)")
+    print(">>> [SecureCode] Backend Service is ACTIVE (Port 4000)")
 
 # Start ML service on port 5001 if not active
 if not is_port_open(5001):
