@@ -15,7 +15,7 @@ import GeneratePage from './GeneratePage';
 import RepairView from './RepairView';
 import LearningDashboard from './LearningDashboard';
 import DashboardView from './DashboardView';
-import CodeScanView from './CodeScanView';
+import CodeScanView, { checkIsCode } from './CodeScanView';
 import ScanResultsView from './ScanResultsView';
 import ScanHistoryView from './ScanHistoryView';
 import SecurityCoverageView from './SecurityCoverageView';
@@ -2947,6 +2947,13 @@ export default function App() {
 
   async function handleScan() {
     if (!code.trim() || scanning) return;
+
+    const validation = checkIsCode(code);
+    if (!validation.isCode) {
+      setError(validation.reason);
+      return;
+    }
+
     setScanSource('Source Code');
     setScanning(true);
     setError(null);
@@ -3064,6 +3071,12 @@ export default function App() {
 
   async function handleScanWithCode(codeToScan, sourceLabel = 'AI Generated Code') {
     if (!codeToScan.trim() || scanning) return;
+
+    const validation = checkIsCode(codeToScan);
+    if (!validation.isCode) {
+      setError(validation.reason);
+      return;
+    }
     setScanning(true);
     setError(null);
     setScanDurationMs(null);

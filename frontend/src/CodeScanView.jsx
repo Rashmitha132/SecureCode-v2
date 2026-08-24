@@ -78,57 +78,85 @@ const PIPELINE_STAGES = [
   { key: 'risk', label: 'Risk Score', icon: ShieldAlert },
 ];
 
-function checkIsCode(text) {
+export function checkIsCode(text) {
   if (!text || !text.trim()) return { isCode: true };
   const t = text.trim();
+  const lower = t.toLowerCase();
   const lines = t.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) return { isCode: true };
 
-  const STRONG_CODE_PATTERNS = [
-    /^\s*(import|from|export|require|include|using|package)\s+[\w@'"{]/m,
-    /^\s*(def|function|func|fn|proc)\s+\w+\s*\(/m,
-    /^\s*(public\s+class|class\s+\w+|struct\s+\w+|interface\s+\w+|enum\s+\w+)/m,
-    /^\s*(const|let|var|val|int|float|double|bool|string)\s+\w+\s*[=;:\(]/m,
-    /^\s*(if|else\s+if|elif|for|while|switch|try|catch)\s*[\(\{:]/m,
-    /=>\s*[\{\(]|\bconsole\.log\(|\bprint\(|\bSystem\.out\.println\(|\bfmt\.Println\(/m,
-    /^\s*(SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|CREATE\s+TABLE)\s+/im,
-    /^\s*\{[\s\S]*"[a-zA-Z0-9_-]+"\s*:\s*[\s\S]*\}/,
-    /^\s*[A-Z0-9_-]+\s*=\s*.+$/m,
-    /^\s*(FROM|RUN|COPY|WORKDIR|CMD|ENTRYPOINT)\s+[a-zA-Z0-9_\/:-]+/m,
+  // 1. Explicit Natural Language Conversational Phrases / Prompts
+  const ENGLISH_PROSE_PREFIXES = [
+    /^(hello|hi|hey|how\s+are\s+you|good\s+morning|good\s+evening)\b/i,
+    /^(what|how|why|when|where|who|tell\s+me|can\s+you|could\s+you|please|explain|write|generate|summarize)\b/i,
+    /^(i\s+want|i\s+am|my\s+name|this\s+is\s+a|this\s+is\s+an|there\s+is|it\s+is|we\s+are|you\s+are)\b/i,
+    /^(the\s+quick\s+brown|once\s+upon\s+a\s+time|lorem\s+ipsum|dear\s+sir|to\s+whom)\b/i,
   ];
 
-  for (const pat of STRONG_CODE_PATTERNS) {
-    if (pat.test(t)) return { isCode: true };
-  }
-
-  const PROSE_SENTENCE_PAT = /^[0-9\.\-\*\•\s]*[A-Z][a-z]{2,}\s+[a-z]{2,}\s+[a-z]{2,}/;
-  let proseLines = 0;
-  for (const line of lines) {
-    if (!/[={};<>]|=>|::|#include|\/\//.test(line) && PROSE_SENTENCE_PAT.test(line)) {
-      proseLines++;
+  for (const pat of ENGLISH_PROSE_PREFIXES) {
+    if (pat.test(t)) {
+      return {
+        isCode: false,
+        reason: 'Natural language text / conversational prompt detected. Please paste actual source code or configuration files.',
+      };
     }
   }
 
-  if (lines.length >= 2 && proseLines / lines.length >= 0.35) {
+  // 2. Strong Positive Code Syntax Patterns
+  const STRONG_CODE_PATTERNS = [
+    /^\s*(import|from|export|require|#include|using|package)\s+[\w@'"{<]/m,
+    /^\s*(def|function|func|fn|proc|async\s+def|async\s+function)\s+\w+\s*\(/m,
+    /^\s*(public\s+|private\s+|protected\s+)?(class|struct|interface|enum)\s+\w+/m,
+    /^\s*(const|let|var|val|int|float|double|bool|string|char)\s+\w+\s*[=;:\(]/m,
+    /^\s*(if|else\s+if|elif|for|while|switch|try|catch|finally)\s*[\(\{:]/m,
+    /=>\s*[\{\(\w]|\bconsole\.log\(|\bprint\(|\bSystem\.out\.println\(|\bfmt\.Println\(|\bprintf\(/m,
+    /^\s*(SELECT\s+.+\s+FROM|INSERT\s+INTO|UPDATE\s+.+\s+SET|DELETE\s+FROM|CREATE\s+TABLE)\s+/im,
+    /^\s*\{[\s\S]*"[a-zA-Z0-9_-]+"\s*:\s*[\s\S]*\}/, // JSON object
+    /^\s*\[[\s\S]*\{[\s\S]*\}\s*\]/, // JSON array
+    /^\s*[A-Z0-9_-]{2,}\s*=\s*.+$/m, // .env assignment
+    /^\s*(FROM|RUN|COPY|WORKDIR|CMD|ENTRYPOINT|ENV|EXPOSE)\s+[a-zA-Z0-9_\/:-]+/m, // Dockerfile
+    /^\s*(dependencies|devDependencies|scripts)\s*:\s*\{/m, // package.json snippet
+    /[a-zA-Z0-9_]+\s*\([^)]*\)\s*;/m, // C-style function call with semicolon
+    /^\s*\w+\s*:\s*.+$/m, // YAML key: value
+  ];
+
+  for (const pat of STRONG_CODE_PATTERNS) {
+    if (pat.test(t)) {
+      return { isCode: true };
+    }
+  }
+
+  // 3. Natural Language Heuristics (Prose sentences without programming punctuation)
+  const codePunctuation = (t.match(/[;{}()[\]=+\-*/<>|\&^~`$\\]/g) || []).length;
+  const words = t.match(/[a-zA-Z]+/g) || [];
+  const wordCount = words.length;
+
+  // Common English stop words
+  const commonEnglishWords = new Set([
+    'the', 'is', 'are', 'was', 'were', 'and', 'or', 'a', 'an', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'about', 'as', 'into', 'like', 'through', 'after', 'over', 'between',
+    'out', 'against', 'during', 'without', 'before', 'under', 'around', 'among', 'this', 'that', 'these',
+    'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why',
+    'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+    'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just', 'should', 'now', 'hello',
+    'please', 'help', 'code', 'write', 'create', 'tell', 'make', 'give', 'check', 'test', 'sample', 'sentence'
+  ]);
+
+  const englishWordHits = words.filter(w => commonEnglishWords.has(w.toLowerCase())).length;
+
+  // If mostly English vocabulary and very little code syntax punctuation
+  if (wordCount >= 2 && (englishWordHits / wordCount >= 0.4 || codePunctuation === 0)) {
     return {
       isCode: false,
-      reason: 'Natural language sentences detected. Please paste valid source code in Python, JavaScript, Java, C++, Go, SQL, JSON, or .env.',
+      reason: 'Plain English / natural language detected. Please enter valid source code (e.g. Python, JavaScript, Java, C++, Go, SQL, or .env).',
     };
   }
 
-  if (lines.length === 1 && PROSE_SENTENCE_PAT.test(lines[0]) && !/[={};<>()]/.test(lines[0])) {
+  // Single sentence / plain words check
+  if (wordCount > 0 && codePunctuation / (wordCount + 1) < 0.15) {
     return {
       isCode: false,
-      reason: 'Plain text sentence detected. Please paste valid programming code.',
-    };
-  }
-
-  const codePunctuation = (t.match(/[;{}()[\]=+\-*/<>]/g) || []).length;
-  const wordCount = (t.match(/[a-zA-Z]+/g) || []).length;
-  if (wordCount > 10 && codePunctuation / (wordCount + 1) < 0.12) {
-    return {
-      isCode: false,
-      reason: 'Natural language text detected. SecureCode scans programming code and configuration files.',
+      reason: 'Natural language text detected. SecureCode is designed to scan programming code and configuration files.',
     };
   }
 

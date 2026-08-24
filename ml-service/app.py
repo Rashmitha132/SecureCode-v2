@@ -187,6 +187,50 @@ class TrainRequest(BaseModel):
     samples: Optional[int] = 400
     epochs: Optional[int] = 20
 
+def is_valid_code_input(text: str) -> Tuple[bool, str]:
+    if not text or not text.strip():
+        return False, "Input is empty."
+    t = text.strip()
+    
+    # 1. Natural Language conversational prompts
+    nl_prompts = [
+        r"^(hello|hi|hey|how\s+are\s+you|good\s+morning|good\s+evening)\b",
+        r"^(what|how|why|when|where|who|tell\s+me|can\s+you|could\s+you|please|explain|write|generate|summarize)\b",
+        r"^(i\s+want|i\s+am|my\s+name|this\s+is\s+a|this\s+is\s+an|there\s+is|it\s+is|we\s+are|you\s+are)\b",
+        r"^(the\s+quick\s+brown|once\s+upon\s+a\s+time|lorem\s+ipsum)\b"
+    ]
+    for pat in nl_prompts:
+        if re.search(pat, t, re.IGNORECASE):
+            return False, "Natural language text / conversational prompt detected. Please enter valid source code."
+
+    # 2. Positive code syntax patterns
+    code_patterns = [
+        r"^\s*(import|from|export|require|#include|using|package)\s+",
+        r"^\s*(def|function|func|fn|proc|async\s+def|async\s+function)\s+\w+\s*\(",
+        r"^\s*(public\s+|private\s+|protected\s+)?(class|struct|interface|enum)\s+\w+",
+        r"^\s*(const|let|var|val|int|float|double|bool|string|char)\s+\w+\s*[=;:\(]",
+        r"^\s*(if|else\s+if|elif|for|while|switch|try|catch|finally)\s*[\(\{:]",
+        r"=>\s*[\{\(\w]|\bconsole\.log\(|\bprint\(|\bSystem\.out\.println\(|\bfmt\.Println\(|\bprintf\(",
+        r"^\s*(SELECT\s+.+\s+FROM|INSERT\s+INTO|UPDATE\s+.+\s+SET|DELETE\s+FROM|CREATE\s+TABLE)\s+",
+        r"^\s*\{[\s\S]*\"[a-zA-Z0-9_-]+\"\s*:\s*[\s\S]*\}",
+        r"^\s*\[[\s\S]*\{[\s\S]*\}\s*\]",
+        r"^\s*[A-Z0-9_-]{2,}\s*=\s*.+$",
+        r"^\s*(FROM|RUN|COPY|WORKDIR|CMD|ENTRYPOINT|ENV|EXPOSE)\s+"
+    ]
+    for pat in code_patterns:
+        if re.search(pat, t, re.MULTILINE | re.IGNORECASE):
+            return True, ""
+
+    words = re.findall(r"[a-zA-Z]+", t)
+    punct = len(re.findall(r"[;{}()[\]=+\-*/<>|&^~`$\\]", t))
+    if len(words) >= 2 and punct == 0:
+        return False, "Plain English sentences detected. Please paste programming code or configuration files."
+
+    if len(words) > 0 and punct / (len(words) + 1) < 0.15:
+        return False, "Natural language text detected. SecureCode is designed to scan programming code and config files."
+
+    return True, ""
+
 # -----------------------------------------------------------------------------
 # 5. CORE SCAN & RISK CALCULATION
 # -----------------------------------------------------------------------------
@@ -195,6 +239,10 @@ def scan_endpoint(req: ScanRequest):
     code = req.code or ""
     if not code:
         raise HTTPException(status_code=400, detail="Provide 'code' to scan.")
+
+    is_code, reason = is_valid_code_input(code)
+    if not is_code:
+        raise HTTPException(status_code=400, detail=reason)
 
     # 1. Pattern & Entropy Scan
     all_findings = []
