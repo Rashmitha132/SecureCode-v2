@@ -3535,6 +3535,8 @@ export default function App() {
         onClose={() => setCopilotOpen(false)}
         results={results}
         code={code}
+        history={history}
+        activeNav={activeNav}
         goToNav={goToNav}
       />
     </div>

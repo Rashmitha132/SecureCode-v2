@@ -1,5 +1,5 @@
 // SecurityCopilotDrawer.jsx
-// Floating Slide-Out AI Security Assistant Drawer with Strict Project-Only Scope
+// Floating Slide-Out AI Security Assistant Drawer with Strict Project-Only Scope and Full Scan History Awareness
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -176,7 +176,15 @@ function FormattedDrawerMessage({ content }) {
   );
 }
 
-export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, goToNav }) {
+export default function SecurityCopilotDrawer({
+  isOpen,
+  onClose,
+  results,
+  code,
+  history = [],
+  activeNav = '',
+  goToNav
+}) {
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
@@ -191,6 +199,16 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
 
   const activeFindings = results?.findings || [];
   const findingsCount = activeFindings.length;
+
+  // Compute History Metrics
+  const totalScans = history.length;
+  const avgScore = totalScans > 0
+    ? Math.round(history.reduce((acc, s) => acc + Math.max(0, 100 - (s.risk_score ?? s.riskScore ?? 0)), 0) / totalScans)
+    : 0;
+  const highRiskCount = history.filter(s => {
+    const r = (s.risk_level || s.riskLevel || '').toLowerCase();
+    return r === 'critical' || r === 'high';
+  }).length;
 
   useEffect(() => {
     if (isOpen) {
@@ -249,7 +267,7 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 3. Code Generation Request Inquiry -> Direct to Generate Code tab
+    // 4. Code Generation Request Inquiry -> Direct to Generate Code tab
     const isGenCodeQuery =
       (
         /\b(generate|write|create|synthesize|build|give me|make|code me|script me)\b/i.test(qLower) &&
@@ -272,7 +290,50 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 4. Fix & Patch Requests for Project Findings
+    // 5. Secret & API Key Inquiries for Project & History
+    if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
+      const activeSecrets = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern');
+
+      const historySecrets = [];
+      history.forEach((s) => {
+        (s.findings || []).forEach((f) => {
+          if (f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern') {
+            historySecrets.push({ scanId: s.id || s.snippet_hash || 'Recent', type: f.type, line: f.line, match: f.matchPreview || '***' });
+          }
+        });
+      });
+
+      if (activeSecrets.length > 0) {
+        let txt = `🔑 **${activeSecrets.length} Exposed Secret(s) Found in Active Code:**\n\n`;
+        activeSecrets.forEach((s, idx) => {
+          txt += `${idx + 1}. **${s.type}** at Line ${s.line} (\`${s.matchPreview || '***'}\`)\n   *Fix:* Replace with environment variable (e.g. \`process.env.DB_PASSWORD\` or \`os.environ.get('DB_PASSWORD')\`).\n\n`;
+        });
+        return { answer: txt };
+      }
+
+      if (historySecrets.length > 0) {
+        let txt = `🔑 **Found ${historySecrets.length} Secret(s) in Your Project Scan History:**\n\n`;
+        historySecrets.slice(0, 4).forEach((s, idx) => {
+          txt += `${idx + 1}. **${s.type}** in Scan \`#${s.scanId}\` (Line ${s.line})\n   *Fix:* Rotate key and move to secrets manager.\n\n`;
+        });
+        return { answer: txt };
+      }
+
+      return {
+        answer: `🔒 **No Leaked Secrets or Plaintext Credentials Detected across your active workspace or recorded scan history (${totalScans} scans).**\n\nTo ensure your project remains secure, always inject keys through \`.env\` files or secret vaults like AWS Secrets Manager. Never commit keys to Git repositories.`
+      };
+    }
+
+    // 6. Scan History & Project Metrics Inquiry
+    if (qLower.includes('history') || qLower.includes('past scan') || qLower.includes('previous scan') || qLower.includes('total scan') || activeNav === 'Scan History') {
+      if (totalScans > 0) {
+        return {
+          answer: `📊 **Project Scan History Overview (${totalScans} Scans Recorded):**\n\n* **Total Scans Recorded:** **${totalScans}**\n* **Average Security Score:** **${avgScore}/100**\n* **High / Critical Risk Scans:** **${highRiskCount}**\n\n${highRiskCount > 0 ? `⚠️ **Attention:** You have ${highRiskCount} scan(s) flagged with High or Critical risks. Click on any record in **Scan History** or go to **Scan Results** to review and auto-patch them!` : '✨ All recorded scans are in good standing!'}`,
+        };
+      }
+    }
+
+    // 7. Fix & Patch Requests for Project Findings
     const isFixQuery =
       /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(qLower) ||
       qLower.includes('how to fix') || qLower.includes('how to patch') || qLower.includes('fix it') || qLower.includes('patch this') || qLower.includes('remediate');
@@ -295,34 +356,21 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 5. Secret & API Key Inquiries for Project
-    if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
-      const secrets = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern');
-      if (secrets.length > 0) {
-        let txt = `🔑 **${secrets.length} Exposed Secret(s) Found in Active Project Code:**\n\n`;
-        secrets.forEach((s, idx) => {
-          txt += `${idx + 1}. **${s.type}** at Line ${s.line} (\`${s.matchPreview || '***'}\`)\n   *Fix:* Replace with environment variable (e.g. \`process.env.DB_PASSWORD\` or \`os.environ.get('DB_PASSWORD')\`).\n\n`;
-        });
-        return { answer: txt };
-      }
-      return { answer: "🔒 **No Leaked Secrets or Plaintext Credentials Detected in Your Scanned Code.**\n\nTo ensure your project remains secure, always inject keys through `.env` files or secret vaults like AWS Secrets Manager. Never commit keys to Git repositories." };
-    }
-
-    // 6. SQL Injection & Database Inquiries
+    // 8. SQL Injection & Database Inquiries
     if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('sqli') || qLower.includes('database')) {
       return {
         answer: `🛡️ **SQL Injection (CWE-89 • OWASP A03) Remediation:**\n\nSQL Injection happens when untrusted user input is directly concatenated or interpolated into database queries without sanitization.\n\n### ❌ Vulnerable Insecure Pattern (Template String / Concat):\n\`\`\`javascript\nconst query = \`SELECT * FROM users WHERE username = '\${username}'\`;\ndb.query(query, (err, results) => { ... });\n\`\`\`\n\n### ✅ Remediated Secure Pattern (Parameterized Prepared Statement):\n\`\`\`javascript\nconst query = "SELECT * FROM users WHERE username = ?";\ndb.query(query, [username], (err, results) => { ... });\n\`\`\`\n\n**Key Rule:** Never concatenate raw inputs into query strings. Always use parameterized placeholders (\`?\` or \`%s\`) or an ORM (like Prisma / SQLAlchemy).`,
       };
     }
 
-    // 7. Cross-Site Scripting (XSS)
+    // 9. Cross-Site Scripting (XSS)
     if (qLower.includes('xss') || qLower.includes('cross-site') || qLower.includes('html')) {
       return {
         answer: `🛡️ **Cross-Site Scripting (XSS • CWE-79) Remediation:**\n\nXSS allows attackers to execute arbitrary scripts in victim browsers, leading to cookie theft and session hijacking.\n\n### ✅ Prevention Steps:\n* Sanitize HTML using **DOMPurify** before rendering.\n* Avoid \`dangerouslySetInnerHTML\` or raw \`innerHTML\`.\n* Set \`Content-Security-Policy\` (CSP) headers on your web server.`,
       };
     }
 
-    // 8. General Active Workspace Audit
+    // 10. General Active Workspace Audit
     const isAuditQuery =
       qLower.includes('audit') || qLower.includes('review') || qLower.includes('scan') ||
       qLower.includes('finding') || qLower.includes('vulnerabilit') || qLower.includes('inspect') ||
@@ -330,11 +378,11 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
 
     if (isAuditQuery) {
       return {
-        answer: `🛡️ **Workspace Security Overview:**\n\n* **Active Code:** ${code ? `Auditing ${code.split('\n').length} lines of code.` : 'No code currently pasted in Code Scan.'}\n* **Active Vulnerabilities:** **${findingsCount} finding(s) detected**.\n\n${findingsCount > 0 ? `### 🔍 Immediate Action Required:\nFound **${activeFindings[0]?.type}** at Line ${activeFindings[0]?.line || 1}. Ask me *"how to fix this"* to see the exact patch snippet!` : 'Your active code currently has zero detected flaws. Feel free to paste any snippet into **Code Scan** and ask me to audit it!'}`,
+        answer: `🛡️ **Workspace Security Overview:**\n\n* **Active Code:** ${code ? `Auditing ${code.split('\n').length} lines of code.` : 'No code currently pasted in Code Scan.'}\n* **Active Vulnerabilities:** **${findingsCount} finding(s) detected**.\n* **Scan History:** ${totalScans} scans recorded (Avg Score: ${avgScore}/100).\n\n${findingsCount > 0 ? `### 🔍 Immediate Action Required:\nFound **${activeFindings[0]?.type}** at Line ${activeFindings[0]?.line || 1}. Ask me *"how to fix this"* to see the exact patch snippet!` : 'Your active code currently has zero detected flaws. Feel free to paste any snippet into **Code Scan** and ask me to audit it!'}`,
       };
     }
 
-    // 9. Strict Polite Decline for ALL other off-topic, general knowledge, or unrelated queries
+    // 11. Strict Polite Decline for ALL other off-topic, general knowledge, or unrelated queries
     return {
       answer: "🔒 **I'm sorry, but I can only assist with questions directly related to auditing and securing your project.**\n\nI am fine-tuned exclusively to inspect your scanned code, explain detected security vulnerabilities (like SQLi, XSS, and exposed secrets), and provide verified remediation patches for your codebase.\n\n*Please feel free to ask me to audit your active code, explain your scan findings, or provide a secure patch for a vulnerability!*",
     };
@@ -484,7 +532,7 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
                 </span>
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-faint)' }}>
-                {findingsCount > 0 ? `${findingsCount} project findings in context` : 'Project Context Connected'}
+                {findingsCount > 0 ? `${findingsCount} project findings in context` : `${totalScans} scans recorded in registry`}
               </div>
             </div>
           </div>
