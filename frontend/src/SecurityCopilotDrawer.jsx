@@ -637,45 +637,6 @@ export default function SecurityCopilotDrawer({
           </div>
         </div>
 
-        {/* Quick Suggestion Pills */}
-        <div
-          style={{
-            padding: '10px 14px',
-            borderBottom: '1px solid var(--border)',
-            display: 'flex',
-            gap: '6px',
-            overflowX: 'auto',
-            background: 'var(--panel)',
-          }}
-        >
-          {DRAWER_SUGGESTIONS.map((s, idx) => {
-            const Icon = s.icon;
-            return (
-              <button
-                key={idx}
-                onClick={() => handleSend(s.query)}
-                style={{
-                  whiteSpace: 'nowrap',
-                  background: 'var(--panel-2)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-dim)',
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <Icon size={12} style={{ color: '#3ba7f0' }} />
-                <span>{s.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* Chat Messages List */}
         <div
           style={{
@@ -771,14 +732,59 @@ export default function SecurityCopilotDrawer({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Drawer Bottom Input */}
+        {/* Drawer Bottom Input & Quick Suggestions */}
         <div
           style={{
-            padding: '12px 14px',
+            padding: '10px 14px 12px',
             borderTop: '1px solid var(--border)',
             background: 'var(--panel-2)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
           }}
         >
+          {/* Quick Suggestion Pills (Positioned at bottom, clean scroll without visible bar) */}
+          <div
+            className="copilot-drawer-pills-row"
+            style={{
+              display: 'flex',
+              gap: '6px',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              paddingBottom: '2px',
+            }}
+          >
+            {DRAWER_SUGGESTIONS.map((s, idx) => {
+              const Icon = s.icon;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(s.query)}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    background: 'var(--panel)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-dim)',
+                    borderRadius: '9999px',
+                    padding: '5px 11px',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Icon size={12} style={{ color: '#3ba7f0' }} />
+                  <span>{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
