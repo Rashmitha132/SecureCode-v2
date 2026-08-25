@@ -3491,36 +3491,37 @@ export default function App() {
         title="Open AI Security Copilot"
         style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 990,
+          bottom: '48px',
+          right: '36px',
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '10px 18px',
+          gap: '10px',
+          padding: '13px 24px',
           borderRadius: '9999px',
           background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
           color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.25)',
-          boxShadow: '0 8px 24px rgba(59, 167, 240, 0.45), 0 2px 6px rgba(0,0,0,0.2)',
+          border: '1.5px solid rgba(255, 255, 255, 0.35)',
+          boxShadow: '0 10px 28px rgba(59, 167, 240, 0.5), 0 4px 12px rgba(0,0,0,0.3)',
           cursor: 'pointer',
-          fontWeight: 700,
-          fontSize: '13.5px',
+          fontWeight: 800,
+          fontSize: '15px',
+          letterSpacing: '-0.2px',
           fontFamily: "'Inter', system-ui, sans-serif",
-          transition: 'all 0.2s ease',
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Bot size={18} />
+          <Bot size={21} />
           <span style={{
             position: 'absolute',
             top: '-2px',
             right: '-2px',
-            width: '7px',
-            height: '7px',
+            width: '8px',
+            height: '8px',
             borderRadius: '50%',
             background: '#10b981',
-            boxShadow: '0 0 6px #10b981'
+            boxShadow: '0 0 8px #10b981'
           }} />
         </div>
         <span>AI Copilot</span>
