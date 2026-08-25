@@ -457,7 +457,11 @@ I am fine-tuned exclusively to audit your scanned code, explain project findings
 
 I am fine-tuned exclusively to audit your project code, explain vulnerability findings, and provide security remediation patches for your codebase.
 
-*Please feel free to ask me about your scanned code, vulnerability findings, or how to fix issues in your project!*`};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(t)||t.includes(`how can u help`)||t.includes(`how can you help`)||t.includes(`how do you help`)||t.includes(`how do u help`)||t===`hi`||t===`hello`||t===`hey`||t===`who r u`||t===`who are you`||t===`help`)return{answer:`👋 **Here is how I can assist you with your project & connected GitHub repositories:**
+*Please feel free to ask me about your scanned code, vulnerability findings, or how to fix issues in your project!*`};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*is\s*your\s*name|what\s*(are|r)\s*(you|u)|introduce\s*yourself|what\s*is\s*your\s*purpose)\b/i.test(t)||t.startsWith(`who r u`)||t.startsWith(`who are you`)||t.startsWith(`who are u`)||t.startsWith(`who r you`)||t===`hi`||t===`hello`||t===`hey`)return{answer:`👋 I am **SecureCode Assistant**, your dedicated AI DevSecOps and code auditing companion.
+
+I am designed to help developers identify vulnerabilities, audit connected GitHub repositories, explain security risks, and provide verified auto-repair patches to keep your codebase secure.
+
+*Ask me: "How can you help me?", "Audit my active code", or "How do I fix my scan findings?"*`};if(/\b(what\s*(can|do)\s*(you|u)\s*do|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(t)||t.includes(`how can u help`)||t.includes(`how can you help`)||t.includes(`how do you help`)||t.includes(`how do u help`)||t===`help`)return{answer:`👋 **Here is how I can assist you with your project & connected GitHub repositories:**
 
 ### 🛡️ 1. Step-by-Step Vulnerability Remediation:
 * Provide **actionable, line-by-line steps on how to fix detected vulnerabilities** (such as SQL Injection, Cross-Site Scripting, exposed API keys/passwords, insecure eval, and command injection).

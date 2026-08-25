@@ -219,16 +219,31 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 2. Identity, Help & Capabilities ("who are you", "how can you help me", "how can u help", "what can you do", "hello", "hi")
-    const isIdentityOrHelp =
-      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(qLower) ||
+    // 2. Identity Inquiry ("who are you", "who r u", "introduce yourself")
+    const isIdentity =
+      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*is\s*your\s*name|what\s*(are|r)\s*(you|u)|introduce\s*yourself|what\s*is\s*your\s*purpose)\b/i.test(qLower) ||
+      qLower.startsWith('who r u') ||
+      qLower.startsWith('who are you') ||
+      qLower.startsWith('who are u') ||
+      qLower.startsWith('who r you') ||
+      qLower === 'hi' || qLower === 'hello' || qLower === 'hey';
+
+    if (isIdentity) {
+      return {
+        answer: "👋 I am **SecureCode Assistant**, your dedicated AI DevSecOps and code auditing companion.\n\nI am designed to help developers identify vulnerabilities, audit connected GitHub repositories, explain security risks, and provide verified auto-repair patches to keep your codebase secure.\n\n*Ask me: \"How can you help me?\", \"Audit my active code\", or \"How do I fix my scan findings?\"*",
+      };
+    }
+
+    // 3. Help, Capabilities & Walkthrough Inquiry ("how can you help me", "how can u help", "what can you do", "help me")
+    const isHelpQuery =
+      /\b(what\s*(can|do)\s*(you|u)\s*do|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(qLower) ||
       qLower.includes('how can u help') ||
       qLower.includes('how can you help') ||
       qLower.includes('how do you help') ||
       qLower.includes('how do u help') ||
-      qLower === 'hi' || qLower === 'hello' || qLower === 'hey' || qLower === 'who r u' || qLower === 'who are you' || qLower === 'help';
+      qLower === 'help';
 
-    if (isIdentityOrHelp) {
+    if (isHelpQuery) {
       return {
         answer: `👋 **Here is how I can assist you with your project & connected GitHub repositories:**\n\n### 🛡️ 1. Step-by-Step Vulnerability Remediation:\n* Provide **actionable, line-by-line steps on how to fix detected vulnerabilities** (such as SQL Injection, Cross-Site Scripting, exposed API keys/passwords, insecure eval, and command injection).\n* Deliver **verified, copy-ready code patches** and unified diffs directly tailored to your files.\n\n### 📂 2. Walk You Through Your Project & Connected GitHub Repos:\n* Walk you through **auditing your connected GitHub / GitLab repositories** to identify vulnerable modules and dependency risks across branches.\n* Help you review pull requests for security flaws before merging into production.\n\n### ⚡ 3. Guide You Through Security Workflows:\n* Explain scan findings in **Scan Results**, audit live snippets in **Code Scan**, and track security score improvements in **Learning Progress**.\n\n*Ask me: "How do I fix the findings?", "Audit my active code", or "Check for exposed credentials in my project!"*`,
       };
