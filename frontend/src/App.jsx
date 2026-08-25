@@ -3485,47 +3485,49 @@ export default function App() {
       </main>
 
       {/* Floating Bottom-Right AI Copilot Action Button */}
-      <button
-        className="floating-copilot-fab"
-        onClick={() => setCopilotOpen(true)}
-        title="Open AI Security Copilot"
-        style={{
-          position: 'fixed',
-          bottom: '48px',
-          right: '36px',
-          zIndex: 99999,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          padding: '13px 24px',
-          borderRadius: '9999px',
-          background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
-          color: '#ffffff',
-          border: '1.5px solid rgba(255, 255, 255, 0.35)',
-          boxShadow: '0 10px 28px rgba(59, 167, 240, 0.5), 0 4px 12px rgba(0,0,0,0.3)',
-          cursor: 'pointer',
-          fontWeight: 800,
-          fontSize: '15px',
-          letterSpacing: '-0.2px',
-          fontFamily: "'Inter', system-ui, sans-serif",
-          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Bot size={21} />
-          <span style={{
-            position: 'absolute',
-            top: '-2px',
-            right: '-2px',
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#10b981',
-            boxShadow: '0 0 8px #10b981'
-          }} />
-        </div>
-        <span>AI Copilot</span>
-      </button>
+      {!copilotOpen && (
+        <button
+          className="floating-copilot-fab"
+          onClick={() => setCopilotOpen(true)}
+          title="Open AI Security Copilot"
+          style={{
+            position: 'fixed',
+            bottom: '48px',
+            right: '36px',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '13px 24px',
+            borderRadius: '9999px',
+            background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
+            color: '#ffffff',
+            border: '1.5px solid rgba(255, 255, 255, 0.35)',
+            boxShadow: '0 10px 28px rgba(59, 167, 240, 0.5), 0 4px 12px rgba(0,0,0,0.3)',
+            cursor: 'pointer',
+            fontWeight: 800,
+            fontSize: '15px',
+            letterSpacing: '-0.2px',
+            fontFamily: "'Inter', system-ui, sans-serif",
+            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Bot size={21} />
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#10b981',
+              boxShadow: '0 0 8px #10b981'
+            }} />
+          </div>
+          <span>AI Copilot</span>
+        </button>
+      )}
 
       {/* Slide-Out AI Security Assistant Drawer */}
       <SecurityCopilotDrawer

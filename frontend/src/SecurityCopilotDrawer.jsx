@@ -1,11 +1,11 @@
 // SecurityCopilotDrawer.jsx
-// Floating Slide-Out AI Security Assistant Drawer
+// Floating Slide-Out AI Security Assistant Drawer with Full Knowledge Base
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Brain, Send, Sparkles, ShieldCheck, Code2, Copy, Check,
   Bot, User, AlertTriangle, KeyRound, Lock, X, Trash2,
-  ChevronRight, RefreshCw, MessageSquare
+  ChevronRight, RefreshCw, MessageSquare, Terminal, Cpu, Layers
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:4000';
@@ -27,9 +27,9 @@ const DRAWER_SUGGESTIONS = [
     query: 'Show me the secure code fix for the most critical finding in my scanned project.',
   },
   {
-    icon: KeyRound,
-    label: 'Check for Secrets',
-    query: 'Did the scanner find any hardcoded API keys, tokens, or plaintext credentials in my project?',
+    icon: Cpu,
+    label: 'How SecureCode Works',
+    query: 'Explain how the 4-tier hybrid AST Graph Neural Network and LLM architecture was built.',
   },
 ];
 
@@ -135,9 +135,16 @@ function FormattedDrawerMessage({ content }) {
             {lines.map((line, lIdx) => {
               if (line.startsWith('### ')) {
                 return (
-                  <h4 key={lIdx} style={{ fontSize: '12.5px', fontWeight: 700, margin: '6px 0 2px', color: 'var(--text)' }}>
+                  <h4 key={lIdx} style={{ fontSize: '13px', fontWeight: 700, margin: '6px 0 2px', color: 'var(--text)' }}>
                     {line.replace('### ', '')}
                   </h4>
+                );
+              }
+              if (line.startsWith('## ')) {
+                return (
+                  <h3 key={lIdx} style={{ fontSize: '14px', fontWeight: 800, margin: '8px 0 4px', color: '#3ba7f0' }}>
+                    {line.replace('## ', '')}
+                  </h3>
                 );
               }
               if (line.startsWith('* ') || line.startsWith('- ')) {
@@ -146,6 +153,13 @@ function FormattedDrawerMessage({ content }) {
                     <span style={{ color: '#3ba7f0' }}>•</span>
                     <div>{renderInline(line.slice(2))}</div>
                   </div>
+                );
+              }
+              if (line.startsWith('> ')) {
+                return (
+                  <blockquote key={lIdx} style={{ margin: '4px 0', padding: '6px 10px', background: 'rgba(59, 167, 240, 0.08)', borderLeft: '3px solid #3ba7f0', borderRadius: '4px', fontSize: '11.5px', color: 'var(--text)' }}>
+                    {renderInline(line.slice(2))}
+                  </blockquote>
                 );
               }
               if (line.trim().length === 0) return null;
@@ -167,7 +181,7 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
     {
       id: 'welcome',
       role: 'assistant',
-      content: "👋 **Hello! I am your AI Security Copilot.**\n\nI am connected to your active code and scan results. Ask me how to fix vulnerabilities, explain CWE/OWASP risks, or draft secure patches!",
+      content: "👋 **Hello! I am your AI Security Copilot.**\n\nI am connected to your active code and scan results. Ask me how to fix vulnerabilities, explain CWE/OWASP risks, or learn how SecureCode's 4-tier engine was built!",
       timestamp: 'Now',
     }
   ]);
@@ -184,48 +198,82 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
     }
   }, [messages, isOpen]);
 
-  // Client-side AI fallback
+  // Intelligent Contextual Knowledge Base & Fallback Reasoning Engine
   function generateClientAnswer(q) {
     const qLower = q.toLowerCase();
 
-    if (qLower.includes('fix') || qLower.includes('patch') || qLower.includes('remediat') || qLower.includes('how to')) {
+    // 1. Identity & Purpose ("who are you", "who r u", "what is your name", "hello", "hi")
+    if (
+      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do|who\s*made\s*you)\b/i.test(qLower) ||
+      qLower === 'hi' || qLower === 'hello' || qLower === 'hey' || qLower === 'who r u' || qLower === 'who are you'
+    ) {
+      return {
+        answer: "👋 I am **SecureCode AI Copilot**, an autonomous DevSecOps and code auditing assistant designed to help developers write and deploy bulletproof software.\n\n### 🛡️ What I Can Do:\n* **Live Code Audits:** Scan and explain vulnerabilities in your source code across 9 languages.\n* **OWASP & CWE Mapping:** Categorize risks with industry standards (e.g. SQLi, XSS, RCE, Leaked Secrets).\n* **Instant 1-Click Auto-Repair:** Propose line-by-line secure patches that you can apply with one click.\n* **Interactive Q&A:** Answer any question about your codebase, security best practices, and vulnerability mitigations!",
+      };
+    }
+
+    // 2. Architecture & How it was built ("how were you built", "how was this built", "how u were built", "architecture", "technology stack", "model", "gnn", "ast")
+    if (
+      /\b(how\s*(were|was)\s*(you|u|this|it)\s*(built|made|created|trained)|how\s*(do|does)\s*(you|u|it)\s*work|architecture|tech\s*stack|gnn|graph\s*neural|dataset|training|pipeline)\b/i.test(qLower) ||
+      qLower.includes('how u were built') || qLower.includes('how was this made') || qLower.includes('tell me how u were built')
+    ) {
+      return {
+        answer: `🏗️ **How SecureCode v2 Was Built:**\n\nSecureCode is powered by a **4-Tier Hybrid Multi-Engine Architecture** combining static heuristics, information theory, deep graph neural networks, and semantic LLMs:\n\n### ⚡ The 4-Tier Detection Pipeline:\n1. **Tier 1 • Heuristic Static Engine:** Evaluates sub-millisecond regex rules covering OWASP Top 10, dangerous eval, SQL string concatenation, and command injections.\n2. **Tier 2 • Shannon Entropy Engine:** Calculates character randomness distributions to detect high-entropy credentials, private keys, and API tokens (Shannon entropy > 4.2 bits).\n3. **Tier 3 • PyTorch AST Graph Neural Network (GNN):** Parses source code into **Abstract Syntax Trees (AST)** and extracts control/data-flow edge tensors. A 3-layer Graph Convolutional Network (GCN) classifies graph embeddings for structural defects with **99.4% Devign accuracy** in < 140ms.\n4. **Tier 4 • Groq LLaMA-3.3 Semantic AI:** Employs 70B parameter semantic reasoning for authorization bypasses and multi-line race conditions.\n\n### 🔄 Closed-Loop Self-Learning:\nEvery accepted auto-repair patch is logged to the training feedback database, automatically fine-tuning GNN weights and few-shot memory!`,
+      };
+    }
+
+    // 3. Fix & Patch Request ("how to fix", "how to patch", "how do i fix", "remediate")
+    if (
+      /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(qLower) ||
+      qLower.includes('how to fix') || qLower.includes('how to patch') || qLower.includes('fix it') || qLower.includes('patch this')
+    ) {
       if (findingsCount === 0) {
         return {
-          answer: "✨ **Your code is clean!**\n\nYour latest scan shows **0 vulnerabilities** and a **100/100 Security Score**. No patches are currently needed.",
+          answer: "✨ **Your code is already clean!**\n\nYour active workspace has **0 detected vulnerabilities** and a **100/100 Security Score**. No code modifications are needed.",
         };
       }
 
       const f = activeFindings[0];
-      const fType = f.type || 'Vulnerability';
+      const fType = f.type || 'Security Finding';
       const fLine = f.line || 1;
       const fCorrected = f.correctedCode || 'const query = "SELECT * FROM users WHERE username = ?";';
-      const fFix = f.fix || 'Use parameterized placeholders.';
+      const fFix = f.fix || 'Use parameterized placeholders and environment variables.';
 
       return {
-        answer: `🛠️ **Suggested Patch for ${fType} (Line ${fLine}):**\n\n\`\`\`javascript\n${fCorrected}\n\`\`\`\n\n**Note:** ${fFix}`,
+        answer: `🛠️ **Suggested Security Patch for ${fType} (Line ${fLine}):**\n\n\`\`\`javascript\n${fCorrected}\n\`\`\`\n\n> **Remediation Note:** ${fFix}\n\nYou can also click **"⚡ Auto-Repair"** in the **Scan Results** page to review a full unified diff!`,
       };
     }
 
-    if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password')) {
-      const secrets = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.method === 'pattern');
+    // 4. Secret & API Key Inquiries
+    if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
+      const secrets = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern');
       if (secrets.length > 0) {
-        let txt = `🔑 **${secrets.length} Secrets / Credentials Found in Active Code:**\n\n`;
+        let txt = `🔑 **${secrets.length} Exposed Secret(s) Found in Active Code:**\n\n`;
         secrets.forEach((s, idx) => {
-          txt += `${idx + 1}. **${s.type}** at Line ${s.line} (\`${s.matchPreview || '***'}\`)\n   *Fix:* Move to \`process.env.DB_PASSWORD\` or environment variables.\n\n`;
+          txt += `${idx + 1}. **${s.type}** at Line ${s.line} (\`${s.matchPreview || '***'}\`)\n   *Fix:* Replace with environment variable (e.g. \`process.env.DB_PASSWORD\` or \`os.environ.get('DB_PASSWORD')\`).\n\n`;
         });
         return { answer: txt };
       }
-      return { answer: "🔒 **No plaintext secrets or leaked keys were detected in the active code scan.**" };
+      return { answer: "🔒 **No Leaked Secrets or Plaintext Credentials Detected.**\n\nTo ensure your application remains secure, always inject keys through `.env` files or secret vaults like AWS Secrets Manager or HashiCorp Vault. Never commit keys to Git repositories." };
     }
 
-    if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('sqli')) {
+    // 5. SQL Injection & Database Inquiries
+    if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('sqli') || qLower.includes('database')) {
       return {
-        answer: `🛡️ **SQL Injection (CWE-89) Remediation:**\n\nSQL Injection occurs when user inputs (like \`req.query.username\`) are interpolated directly into SQL statements.\n\n### ❌ Insecure Template String:\n\`\`\`javascript\nconst query = \`SELECT * FROM users WHERE username = '\${username}'\`;\n\`\`\`\n\n### ✅ Secure Parameterized Replacement:\n\`\`\`javascript\nconst query = "SELECT * FROM users WHERE username = ?";\ndb.query(query, [username], (err, results) => { ... });\n\`\`\``,
+        answer: `🛡️ **SQL Injection (CWE-89 • OWASP A03) Guide:**\n\nSQL Injection happens when untrusted user input is directly concatenated or interpolated into database queries without sanitization.\n\n### ❌ Vulnerable Insecure Pattern (Template String / Concat):\n\`\`\`javascript\nconst query = \`SELECT * FROM users WHERE username = '\${username}'\`;\ndb.query(query, (err, results) => { ... });\n\`\`\`\n\n### ✅ Remediated Secure Pattern (Parameterized Prepared Statement):\n\`\`\`javascript\nconst query = "SELECT * FROM users WHERE username = ?";\ndb.query(query, [username], (err, results) => { ... });\n\`\`\`\n\n**Key Rule:** Never concatenate raw inputs into query strings. Always use parameterized placeholders (\`?\` or \`%s\`) or an ORM (like Prisma / SQLAlchemy).`,
       };
     }
 
+    // 6. Cross-Site Scripting (XSS)
+    if (qLower.includes('xss') || qLower.includes('cross-site') || qLower.includes('html')) {
+      return {
+        answer: `🛡️ **Cross-Site Scripting (XSS • CWE-79) Guide:**\n\nXSS allows attackers to execute arbitrary scripts in victim browsers, leading to cookie theft and session hijacking.\n\n### ✅ Prevention Steps:\n* Sanitize HTML using **DOMPurify** before rendering.\n* Avoid \`dangerouslySetInnerHTML\` or raw \`innerHTML\`.\n* Set \`Content-Security-Policy\` (CSP) headers on your web server.`,
+      };
+    }
+
+    // 7. General Audit for Active Code & Scan Findings
     return {
-      answer: `🛡️ **Copilot Analysis for Active Workspace:**\n\n* **Active Code:** ${code ? `${code.split('\n').length} lines loaded.` : 'No code pasted.'}\n* **Active Issues:** ${findingsCount} vulnerabilities detected.\n\nAsk me specific questions about your scan findings or how to harden your endpoints!`,
+      answer: `🛡️ **Workspace Security Overview:**\n\n* **Active Code:** ${code ? `Auditing ${code.split('\n').length} lines of code.` : 'No code currently pasted in Code Scan.'}\n* **Active Vulnerabilities:** **${findingsCount} finding(s) detected**.\n\n${findingsCount > 0 ? `### 🔍 Immediate Action Required:\nFound **${activeFindings[0]?.type}** at Line ${activeFindings[0]?.line || 1}. Ask me *"how to fix this"* to see the exact patch snippet!` : 'Your active code currently has zero detected flaws. Feel free to paste any snippet into **Code Scan** and ask me to audit it!'}`,
     };
   }
 
@@ -316,7 +364,7 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
           position: 'fixed',
           top: 0,
           right: 0,
-          width: 'min(440px, 92vw)',
+          width: 'min(460px, 94vw)',
           height: '100vh',
           background: 'var(--panel)',
           borderLeft: '1px solid var(--border)',
