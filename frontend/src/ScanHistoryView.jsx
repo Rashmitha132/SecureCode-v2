@@ -56,6 +56,7 @@ function formatExactDate(dateStr) {
 
 export default function ScanHistoryView({
   history = [],
+  setHistory,
   historyLoading = false,
   historyError = null,
   onRefreshHistory,
@@ -160,6 +161,45 @@ export default function ScanHistoryView({
         sourceType: src,
       });
       goToNav('Scan Results');
+    }
+  }
+
+  function handleToggleScanStatus(scan, e) {
+    if (e) e.stopPropagation();
+    const findingsCount = scan.total_findings ?? scan.totalFindings ?? (scan.findings || []).length;
+    if (findingsCount === 0) return; // Clean scans have 0 issues to toggle
+
+    const findingsList = scan.findings || [];
+    const allFixed = findingsCount > 0 && findingsList.length > 0 && findingsList.every(f => f.fixed || f._fixed || f.status === 'fixed');
+    const newFixedState = !allFixed;
+
+    const updatedScan = {
+      ...scan,
+      findings: (findingsList.length > 0 ? findingsList : Array.from({ length: findingsCount }).map((_, idx) => ({ id: idx, type: 'Security Finding' }))).map(f => ({
+        ...f,
+        fixed: newFixedState,
+        _fixed: newFixedState,
+        status: newFixedState ? 'fixed' : 'open',
+      })),
+      all_fixed: newFixedState,
+    };
+
+    try {
+      const cached = localStorage.getItem('sc_local_history');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const idx = parsed.findIndex(s => s.id === scan.id);
+        if (idx !== -1) {
+          parsed[idx] = updatedScan;
+        } else if (parsed.length > 0) {
+          parsed[0] = updatedScan;
+        }
+        localStorage.setItem('sc_local_history', JSON.stringify(parsed));
+      }
+    } catch (err) {}
+
+    if (setHistory) {
+      setHistory(prev => (prev || []).map(s => s.id === scan.id ? updatedScan : s));
     }
   }
 
@@ -479,7 +519,9 @@ export default function ScanHistoryView({
 
                         <td>
                           {isPending ? (
-                            <span
+                            <button
+                              onClick={(e) => handleToggleScanStatus(scan, e)}
+                              title="Click to toggle status to Fixed"
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -491,13 +533,17 @@ export default function ScanHistoryView({
                                 background: 'rgba(245, 158, 11, 0.15)',
                                 color: '#f59e0b',
                                 border: '1px solid rgba(245, 158, 11, 0.35)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
                               }}
                             >
                               <AlertTriangle size={11} />
                               Pending
-                            </span>
+                            </button>
                           ) : allFixed ? (
-                            <span
+                            <button
+                              onClick={(e) => handleToggleScanStatus(scan, e)}
+                              title="Click to toggle status to Pending"
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
@@ -509,11 +555,13 @@ export default function ScanHistoryView({
                                 background: 'rgba(16, 185, 129, 0.15)',
                                 color: '#10b981',
                                 border: '1px solid rgba(16, 185, 129, 0.35)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
                               }}
                             >
                               <CheckCircle2 size={11} />
                               Fixed
-                            </span>
+                            </button>
                           ) : (
                             <span
                               style={{

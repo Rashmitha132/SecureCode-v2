@@ -214,6 +214,7 @@ function applySingleFix(finding, fullCode) {
 export default function ScanResultsView({
   results,
   history,
+  setHistory,
   code,
   setCode,
   scanning,
@@ -334,6 +335,21 @@ export default function ScanResultsView({
       }));
     }
 
+    // Persist to local history immediately
+    try {
+      const cached = localStorage.getItem('sc_local_history');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const target = parsed.find(s => s.id === effectiveResults?.id) || parsed[0];
+        if (target) {
+          target.findings = updatedFindings;
+          target.all_fixed = updatedFindings.length > 0 && updatedFindings.every(f => f.fixed || f._fixed || f.status === 'fixed');
+          localStorage.setItem('sc_local_history', JSON.stringify(parsed));
+          if (setHistory) setHistory(parsed);
+        }
+      }
+    } catch (e) {}
+
     // When marked as fixed, update the user's code in Code Scan immediately!
     if (willBeFixed && finding && setCode && code) {
       const updatedCode = applySingleFix(finding, code);
@@ -373,6 +389,21 @@ export default function ScanResultsView({
         findings: updatedFindings,
       }));
     }
+
+    // Persist all fixes to local history
+    try {
+      const cached = localStorage.getItem('sc_local_history');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const target = parsed.find(s => s.id === effectiveResults?.id) || parsed[0];
+        if (target) {
+          target.findings = updatedFindings;
+          target.all_fixed = true;
+          localStorage.setItem('sc_local_history', JSON.stringify(parsed));
+          if (setHistory) setHistory(parsed);
+        }
+      }
+    } catch (e) {}
 
     setApplyToast(`✓ All ${findings.length} vulnerabilities fixed & reflected in Code Scan!`);
     setTimeout(() => setApplyToast(null), 3500);

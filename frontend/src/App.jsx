@@ -3139,9 +3139,25 @@ export default function App() {
   }
 
   // Called when user accepts an AI repair patch.
-  // Updates code state, triggers a rescan, and refreshes the dashboard.
+  // Updates code state, marks scan as fixed, triggers a rescan, and refreshes dashboard.
   function handleApplyRepair(repairedCode) {
     setCode(repairedCode);
+    // Mark previous scan in local history as fixed
+    try {
+      const localHist = JSON.parse(localStorage.getItem('sc_local_history') || '[]');
+      if (localHist.length > 0) {
+        localHist[0].findings = (localHist[0].findings || []).map(f => ({
+          ...f,
+          fixed: true,
+          _fixed: true,
+          status: 'fixed',
+        }));
+        localHist[0].all_fixed = true;
+        localStorage.setItem('sc_local_history', JSON.stringify(localHist));
+        setHistory(localHist);
+      }
+    } catch (e) {}
+
     // Trigger background rescan with the new repaired code
     setTimeout(() => {
       handleScanWithCode(repairedCode);
@@ -3234,6 +3250,7 @@ export default function App() {
         <ScanResultsView
           results={results}
           history={history}
+          setHistory={setHistory}
           code={code}
           setCode={setCode}
           scanning={scanning}
@@ -3250,6 +3267,7 @@ export default function App() {
       return (
         <ScanHistoryView
           history={history}
+          setHistory={setHistory}
           historyLoading={historyLoading}
           historyError={historyError}
           onRefreshHistory={fetchHistory}
