@@ -405,7 +405,7 @@ export default function ScanHistoryView({
                   <tr>
                     <th>Scan Details / Source</th>
                     <th style={{ width: 120 }}>Risk Level</th>
-                    <th style={{ width: 100 }}>Security Score</th>
+                    <th style={{ width: 115 }}>Status</th>
                     <th style={{ width: 120 }}>Findings</th>
                     <th style={{ width: 130 }}>Date & Time</th>
                     <th style={{ width: 110, textAlign: 'right' }}>Actions</th>
@@ -423,9 +423,10 @@ export default function ScanHistoryView({
                         ? 'v2-badge-medium'
                         : 'v2-badge-low';
 
-                    const findingsCount = scan.total_findings ?? scan.totalFindings ?? 0;
-                    const score = Math.max(0, 100 - (scan.risk_score ?? scan.riskScore ?? 0));
-                    const scoreColor = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+                    const findingsCount = scan.total_findings ?? scan.totalFindings ?? (scan.findings || []).length;
+                    const findingsList = scan.findings || [];
+                    const allFixed = findingsCount > 0 && findingsList.length > 0 && findingsList.every(f => f.fixed || f._fixed || f.status === 'fixed');
+                    const isPending = findingsCount > 0 && !allFixed;
                     const src = scan.source_type || scan.sourceType || 'Source Code';
                     const isAiGen = src.toLowerCase().includes('generated') || src.toLowerCase().includes('ai');
                     const scanId = scan.id || (filteredHistory.length - ((pageClamped - 1) * PAGE_SIZE + i));
@@ -477,9 +478,61 @@ export default function ScanHistoryView({
                         </td>
 
                         <td>
-                          <span style={{ fontWeight: 700, color: scoreColor }}>
-                            {score}/100
-                          </span>
+                          {isPending ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: 'rgba(245, 158, 11, 0.15)',
+                                color: '#f59e0b',
+                                border: '1px solid rgba(245, 158, 11, 0.35)',
+                              }}
+                            >
+                              <AlertTriangle size={11} />
+                              Pending
+                            </span>
+                          ) : allFixed ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: 'rgba(16, 185, 129, 0.15)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16, 185, 129, 0.35)',
+                              }}
+                            >
+                              <CheckCircle2 size={11} />
+                              Fixed
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                              }}
+                            >
+                              <CheckCircle2 size={11} />
+                              Clean
+                            </span>
+                          )}
                         </td>
 
                         <td>
