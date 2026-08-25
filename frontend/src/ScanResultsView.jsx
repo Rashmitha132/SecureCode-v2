@@ -224,9 +224,33 @@ export default function ScanResultsView({
   scanSource = 'Source Code'
 }) {
   const [tab, setTab] = useState('current'); // 'current' | 'generated' | 'history'
+
+  // Resolve effective scan results: active scan if present with findings, or latest recorded scan from history / localStorage
+  const effectiveResults = (() => {
+    if (results && results.findings && results.findings.length > 0) {
+      return results;
+    }
+    const hist = Array.isArray(history) && history.length > 0 ? history : [];
+    if (hist.length > 0 && hist[0]?.findings?.length > 0) {
+      return hist[0];
+    }
+    try {
+      const cached = localStorage.getItem('sc_local_history');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.findings?.length > 0) {
+          return parsed[0];
+        }
+      }
+    } catch (e) {}
+    return results || { findings: [] };
+  })();
+
+  const findings = effectiveResults?.findings || [];
+
   const [fixedMap, setFixedMap] = useState(() => {
     const init = {};
-    (results?.findings || []).forEach((f, i) => {
+    findings.forEach((f, i) => {
       if (f.fixed || f._fixed || f.status === 'fixed') {
         init[i] = true;
       }
@@ -244,11 +268,9 @@ export default function ScanResultsView({
   const [applyToast, setApplyToast] = useState(null);
   const PAGE_SIZE = 8;
 
-  const findings = results?.findings || [];
-
   useEffect(() => {
     const updated = {};
-    (results?.findings || []).forEach((f, i) => {
+    findings.forEach((f, i) => {
       if (f.fixed || f._fixed || f.status === 'fixed') {
         updated[i] = true;
       }
@@ -260,7 +282,7 @@ export default function ScanResultsView({
     setPage(1);
     setRepairData(null);
     setRepairError(null);
-  }, [results?.scannedAt || results?.timestamp]);
+  }, [effectiveResults?.scannedAt || effectiveResults?.timestamp || effectiveResults?.id]);
 
   async function handleAutoRepair() {
     if (!code?.trim() || isRepairing) return;
@@ -627,10 +649,10 @@ export default function ScanResultsView({
   const openCount = scored.length - fixedCount;
   const totalIssues = scored.length;
   const remediationPct = totalIssues ? Math.round((fixedCount / totalIssues) * 100) : 0;
-  const securityScore = Math.max(0, 100 - (results?.riskScore ?? 0));
+  const securityScore = Math.max(0, 100 - (effectiveResults?.risk_score ?? effectiveResults?.riskScore ?? 0));
   const scoreColor = securityScore >= 80 ? '#10b981' : securityScore >= 60 ? '#f59e0b' : '#ef4444';
   const scoreLabel = securityScore >= 80 ? 'Good' : securityScore >= 60 ? 'Fair' : 'At Risk';
-  const hasData = Boolean(results);
+  const hasData = Boolean(effectiveResults && (findings.length > 0 || effectiveResults.risk_score !== undefined || effectiveResults.riskScore !== undefined));
 
   const FILTERS = [
     { key: 'all', label: `All (${totalIssues})` },
