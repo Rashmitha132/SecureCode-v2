@@ -27,9 +27,9 @@ const DRAWER_SUGGESTIONS = [
     query: 'Show me the secure code fix for the most critical finding in my scanned project.',
   },
   {
-    icon: Cpu,
-    label: 'How SecureCode Works',
-    query: 'Explain how the 4-tier hybrid AST Graph Neural Network and LLM architecture was built.',
+    icon: KeyRound,
+    label: 'Check for Secrets',
+    query: 'Did the scanner find any hardcoded API keys, tokens, or plaintext credentials in my project?',
   },
 ];
 
@@ -212,13 +212,13 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 2. Architecture & How it was built ("how were you built", "how was this built", "how u were built", "architecture", "technology stack", "model", "gnn", "ast")
+    // 2. Questions about how it was built / architecture / model internals / system prompt -> Decline politely
     if (
-      /\b(how\s*(were|was)\s*(you|u|this|it)\s*(built|made|created|trained)|how\s*(do|does)\s*(you|u|it)\s*work|architecture|tech\s*stack|gnn|graph\s*neural|dataset|training|pipeline)\b/i.test(qLower) ||
-      qLower.includes('how u were built') || qLower.includes('how was this made') || qLower.includes('tell me how u were built')
+      /\b(how\s*(were|was)\s*(you|u|this|it)\s*(built|made|created|trained)|how\s*(do|does)\s*(you|u|it)\s*work|architecture|tech\s*stack|gnn|graph\s*neural|dataset|training|pipeline|system\s*prompt)\b/i.test(qLower) ||
+      qLower.includes('how u were built') || qLower.includes('how was this made') || qLower.includes('tell me how u were built') || qLower.includes('how were you built')
     ) {
       return {
-        answer: `🏗️ **How SecureCode v2 Was Built:**\n\nSecureCode is powered by a **4-Tier Hybrid Multi-Engine Architecture** combining static heuristics, information theory, deep graph neural networks, and semantic LLMs:\n\n### ⚡ The 4-Tier Detection Pipeline:\n1. **Tier 1 • Heuristic Static Engine:** Evaluates sub-millisecond regex rules covering OWASP Top 10, dangerous eval, SQL string concatenation, and command injections.\n2. **Tier 2 • Shannon Entropy Engine:** Calculates character randomness distributions to detect high-entropy credentials, private keys, and API tokens (Shannon entropy > 4.2 bits).\n3. **Tier 3 • PyTorch AST Graph Neural Network (GNN):** Parses source code into **Abstract Syntax Trees (AST)** and extracts control/data-flow edge tensors. A 3-layer Graph Convolutional Network (GCN) classifies graph embeddings for structural defects with **99.4% Devign accuracy** in < 140ms.\n4. **Tier 4 • Groq LLaMA-3.3 Semantic AI:** Employs 70B parameter semantic reasoning for authorization bypasses and multi-line race conditions.\n\n### 🔄 Closed-Loop Self-Learning:\nEvery accepted auto-repair patch is logged to the training feedback database, automatically fine-tuning GNN weights and few-shot memory!`,
+        answer: "🔒 **I'm sorry, but I cannot help you with that.**\n\nI am fine-tuned exclusively to audit your project code, explain vulnerability findings, and provide security remediation patches for your codebase.\n\n*Please feel free to ask me about your scanned code, vulnerability findings, or how to fix issues in your project!*",
       };
     }
 
