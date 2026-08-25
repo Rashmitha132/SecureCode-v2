@@ -1,5 +1,5 @@
 // SecurityCopilotDrawer.jsx
-// Floating Slide-Out AI Security Assistant Drawer with Strict Project-Only Scope and Full Scan History Awareness
+// Floating Slide-Out AI Security Assistant Drawer with Strict Project Scope, LocalStorage Cache Fallback & Prioritized Remediation
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -197,15 +197,26 @@ export default function SecurityCopilotDrawer({
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Fallback to localStorage if history prop is currently empty
+  let effectiveHistory = Array.isArray(history) && history.length > 0 ? history : [];
+  if (effectiveHistory.length === 0) {
+    try {
+      const cached = localStorage.getItem('sc_local_history');
+      if (cached) {
+        effectiveHistory = JSON.parse(cached);
+      }
+    } catch (e) {}
+  }
+
   const activeFindings = results?.findings || [];
   const findingsCount = activeFindings.length;
 
   // Compute History Metrics
-  const totalScans = history.length;
+  const totalScans = effectiveHistory.length;
   const avgScore = totalScans > 0
-    ? Math.round(history.reduce((acc, s) => acc + Math.max(0, 100 - (s.risk_score ?? s.riskScore ?? 0)), 0) / totalScans)
+    ? Math.round(effectiveHistory.reduce((acc, s) => acc + Math.max(0, 100 - (s.risk_score ?? s.riskScore ?? 0)), 0) / totalScans)
     : 0;
-  const highRiskCount = history.filter(s => {
+  const highRiskCount = effectiveHistory.filter(s => {
     const r = (s.risk_level || s.riskLevel || '').toLowerCase();
     return r === 'critical' || r === 'high';
   }).length;
@@ -290,12 +301,65 @@ export default function SecurityCopilotDrawer({
       };
     }
 
-    // 5. Secret & API Key Inquiries for Project & History
+    // 5. Prioritized Vulnerability Audit ("Analyze the security vulnerabilities", "what to fix first", "prioritize")
+    const isPrioritizeQuery =
+      qLower.includes('what to fix first') ||
+      qLower.includes('tell me what to fix first') ||
+      qLower.includes('analyze the security vulnerabilities') ||
+      qLower.includes('fix priority') ||
+      qLower.includes('prioritize');
+
+    if (isPrioritizeQuery) {
+      // Case A: Findings in active code scan
+      if (findingsCount > 0) {
+        let txt = `🚨 **Prioritized Vulnerability Remediation Guide (${findingsCount} finding${findingsCount > 1 ? 's' : ''}):**\n\n`;
+        activeFindings.forEach((f, idx) => {
+          txt += `### ${idx + 1}. **${f.type}** (Line ${f.line || 1}) — *${f.severity || 'High'} Severity*\n`;
+          txt += `* **CWE / Standard:** ${f.cwe || 'CWE-89'}\n`;
+          txt += `* **Fix Action:** ${f.fix || 'Apply secure parameterization and input sanitization.'}\n`;
+          if (f.correctedCode) {
+            txt += `\`\`\`javascript\n${f.correctedCode}\n\`\`\`\n\n`;
+          }
+        });
+        txt += `💡 **Recommended Next Step:** Click **"⚡ Auto-Repair"** in **Scan Results** to review and apply unified diffs!`;
+        return { answer: txt };
+      }
+
+      // Case B: Check latest scan in history
+      if (effectiveHistory.length > 0) {
+        const latest = effectiveHistory[0];
+        const latestFindings = latest.findings || [];
+        const latestScore = Math.max(0, 100 - (latest.risk_score ?? latest.riskScore ?? 0));
+
+        if (latestFindings.length > 0) {
+          let txt = `📊 **Auditing Latest Recorded Project Scan (#${latest.id || latest.snippet_hash || 'Latest'} • Score: ${latestScore}/100):**\n\n`;
+          txt += `🚨 **Fix Priority Order:**\n\n`;
+          latestFindings.forEach((f, idx) => {
+            txt += `${idx + 1}. **${f.type}** (Line ${f.line || 1}) — *${f.severity || 'High'} Severity*\n   > **Fix:** ${f.fix || 'Sanitize input.'}\n\n`;
+          });
+          txt += `To inspect the full code diff for this scan, go to **Scan History** and click **Inspect Scan**!`;
+          return { answer: txt };
+        }
+      }
+
+      // Case C: Clean code or no scans yet
+      if (code && code.trim().length > 0) {
+        return {
+          answer: "✨ **Your active code scan is clean!**\n\nYour latest scan shows **0 detected vulnerabilities** and a **100/100 Security Score**. No immediate security fixes are needed.",
+        };
+      }
+
+      return {
+        answer: "📋 **No Active Code Scanned Yet**\n\nTo audit your vulnerabilities and get a prioritized remediation guide:\n1. Go to the **Code Scan** tab.\n2. Paste your code snippet or upload a project file.\n3. Click **Scan Code**.\n\nOnce scanned, ask me here and I will immediately rank your flaws and show you what to fix first!",
+      };
+    }
+
+    // 6. Secret & API Key Inquiries for Project & History
     if (qLower.includes('secret') || qLower.includes('api key') || qLower.includes('token') || qLower.includes('password') || qLower.includes('credential')) {
       const activeSecrets = activeFindings.filter(f => f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern');
 
       const historySecrets = [];
-      history.forEach((s) => {
+      effectiveHistory.forEach((s) => {
         (s.findings || []).forEach((f) => {
           if (f.type?.toLowerCase().includes('key') || f.type?.toLowerCase().includes('token') || f.type?.toLowerCase().includes('password') || f.type?.toLowerCase().includes('secret') || f.method === 'pattern') {
             historySecrets.push({ scanId: s.id || s.snippet_hash || 'Recent', type: f.type, line: f.line, match: f.matchPreview || '***' });
@@ -324,7 +388,7 @@ export default function SecurityCopilotDrawer({
       };
     }
 
-    // 6. Scan History & Project Metrics Inquiry
+    // 7. Scan History & Project Metrics Inquiry
     if (qLower.includes('history') || qLower.includes('past scan') || qLower.includes('previous scan') || qLower.includes('total scan') || activeNav === 'Scan History') {
       if (totalScans > 0) {
         return {
@@ -333,7 +397,7 @@ export default function SecurityCopilotDrawer({
       }
     }
 
-    // 7. Fix & Patch Requests for Project Findings
+    // 8. Fix & Patch Requests for Project Findings
     const isFixQuery =
       /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(qLower) ||
       qLower.includes('how to fix') || qLower.includes('how to patch') || qLower.includes('fix it') || qLower.includes('patch this') || qLower.includes('remediate');
@@ -356,21 +420,21 @@ export default function SecurityCopilotDrawer({
       };
     }
 
-    // 8. SQL Injection & Database Inquiries
+    // 9. SQL Injection & Database Inquiries
     if (qLower.includes('sql') || qLower.includes('injection') || qLower.includes('sqli') || qLower.includes('database')) {
       return {
         answer: `🛡️ **SQL Injection (CWE-89 • OWASP A03) Remediation:**\n\nSQL Injection happens when untrusted user input is directly concatenated or interpolated into database queries without sanitization.\n\n### ❌ Vulnerable Insecure Pattern (Template String / Concat):\n\`\`\`javascript\nconst query = \`SELECT * FROM users WHERE username = '\${username}'\`;\ndb.query(query, (err, results) => { ... });\n\`\`\`\n\n### ✅ Remediated Secure Pattern (Parameterized Prepared Statement):\n\`\`\`javascript\nconst query = "SELECT * FROM users WHERE username = ?";\ndb.query(query, [username], (err, results) => { ... });\n\`\`\`\n\n**Key Rule:** Never concatenate raw inputs into query strings. Always use parameterized placeholders (\`?\` or \`%s\`) or an ORM (like Prisma / SQLAlchemy).`,
       };
     }
 
-    // 9. Cross-Site Scripting (XSS)
+    // 10. Cross-Site Scripting (XSS)
     if (qLower.includes('xss') || qLower.includes('cross-site') || qLower.includes('html')) {
       return {
         answer: `🛡️ **Cross-Site Scripting (XSS • CWE-79) Remediation:**\n\nXSS allows attackers to execute arbitrary scripts in victim browsers, leading to cookie theft and session hijacking.\n\n### ✅ Prevention Steps:\n* Sanitize HTML using **DOMPurify** before rendering.\n* Avoid \`dangerouslySetInnerHTML\` or raw \`innerHTML\`.\n* Set \`Content-Security-Policy\` (CSP) headers on your web server.`,
       };
     }
 
-    // 10. General Active Workspace Audit
+    // 11. General Active Workspace Audit
     const isAuditQuery =
       qLower.includes('audit') || qLower.includes('review') || qLower.includes('scan') ||
       qLower.includes('finding') || qLower.includes('vulnerabilit') || qLower.includes('inspect') ||
@@ -382,7 +446,7 @@ export default function SecurityCopilotDrawer({
       };
     }
 
-    // 11. Strict Polite Decline for ALL other off-topic, general knowledge, or unrelated queries
+    // 12. Strict Polite Decline for ALL other off-topic, general knowledge, or unrelated queries
     return {
       answer: "🔒 **I'm sorry, but I can only assist with questions directly related to auditing and securing your project.**\n\nI am fine-tuned exclusively to inspect your scanned code, explain detected security vulnerabilities (like SQLi, XSS, and exposed secrets), and provide verified remediation patches for your codebase.\n\n*Please feel free to ask me to audit your active code, explain your scan findings, or provide a secure patch for a vulnerability!*",
     };

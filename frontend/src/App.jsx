@@ -2832,9 +2832,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (activeNav === 'Scan History' || activeNav === 'Dashboard') {
-      fetchHistory();
-    }
+    fetchHistory();
   }, [activeNav]);
 
   async function fetchHistory() {
