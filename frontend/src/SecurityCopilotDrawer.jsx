@@ -7,6 +7,7 @@ import {
   Bot, User, AlertTriangle, KeyRound, Lock, X, Trash2,
   ChevronRight, RefreshCw, MessageSquare, Terminal, Cpu, Layers
 } from 'lucide-react';
+import { getScanName } from './scanNameUtil';
 
 const API_URL = 'http://localhost:4000';
 
@@ -411,16 +412,17 @@ export default function SecurityCopilotDrawer({
         };
       }
 
+      const scanName = getScanName(recent);
       const scanId = recent.id || recent.snippet_hash || (recent.scanned_at ? `Scan @ ${new Date(recent.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Latest Scan');
       const scanFindings = recent.findings || [];
       const count = recent.total_findings ?? scanFindings.length;
       const score = Math.max(0, 100 - (recent.risk_score ?? recent.riskScore ?? 0));
       const risk = recent.risk_level || recent.riskLevel || (score < 50 ? 'High' : score < 80 ? 'Medium' : 'Low');
-      const source = recent.source || 'Source Code';
+      const source = recent.source || recent.source_type || 'Source Code';
       const scanDate = recent.scanned_at || recent.scannedAt || recent.timestamp ? new Date(recent.scanned_at || recent.scannedAt || recent.timestamp).toLocaleString() : 'Recent';
 
       let reply = `📊 **Details of Your Most Recent Scan:**\n\n`;
-      reply += `* **Scan ID / Reference:** \`#${scanId}\`\n`;
+      reply += `* **Scan Name:** **${scanName}** (\`#${scanId}\`)\n`;
       reply += `* **Source:** **${source}**\n`;
       reply += `* **Security Score:** **${score}/100** (${risk} Risk)\n`;
       reply += `* **Timestamp:** ${scanDate}\n\n`;

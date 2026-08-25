@@ -24,6 +24,7 @@ import {
   Inbox,
   RefreshCw,
 } from 'lucide-react';
+import { getScanName } from './scanNameUtil';
 
 function formatRelTime(dateStr) {
   if (!dateStr) return 'Unknown';
@@ -450,7 +451,8 @@ export default function ScanHistoryView({
                             </div>
                             <div>
                               <div className="v2-issue-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <span>Scan #{scanId}</span>
+                                <span style={{ fontWeight: 700, color: 'var(--text)' }}>{getScanName(scan)}</span>
+                                <span style={{ fontSize: 10.5, color: 'var(--text-faint)', fontFamily: 'monospace' }}>#{scanId}</span>
                                 <span
                                   className="v2-status-pill"
                                   style={{
