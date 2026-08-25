@@ -25,6 +25,7 @@ import ConfigurationCheckView from './ConfigurationCheckView';
 import DependencyCheckView from './DependencyCheckView';
 import AIPrioritizationView from './AIPrioritizationView';
 import SecurityCopilotView from './SecurityCopilotView';
+import SecurityCopilotDrawer from './SecurityCopilotDrawer';
 import SettingsView from './SettingsView';
 import HowItWorksView from './HowItWorksView';
 import { Bot } from 'lucide-react';
@@ -64,7 +65,6 @@ const NAV_GROUPS = [
   {
     label: 'Analysis',
     items: [
-      { label: 'Security Copilot', icon: Bot },
       { label: 'Security Coverage', icon: ShieldAlert },
       { label: 'Secrets Detection', icon: KeyRound },
       { label: 'Configuration Check', icon: Sliders },
@@ -2790,6 +2790,7 @@ export default function App() {
   const [autoClear, setAutoClear] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -3482,6 +3483,57 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* Floating Bottom-Right AI Copilot Action Button */}
+      <button
+        className="floating-copilot-fab"
+        onClick={() => setCopilotOpen(true)}
+        title="Open AI Security Copilot"
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 990,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '10px 18px',
+          borderRadius: '9999px',
+          background: 'linear-gradient(135deg, #3ba7f0 0%, #7c6ee8 100%)',
+          color: '#ffffff',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          boxShadow: '0 8px 24px rgba(59, 167, 240, 0.45), 0 2px 6px rgba(0,0,0,0.2)',
+          cursor: 'pointer',
+          fontWeight: 700,
+          fontSize: '13.5px',
+          fontFamily: "'Inter', system-ui, sans-serif",
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Bot size={18} />
+          <span style={{
+            position: 'absolute',
+            top: '-2px',
+            right: '-2px',
+            width: '7px',
+            height: '7px',
+            borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 6px #10b981'
+          }} />
+        </div>
+        <span>AI Copilot</span>
+      </button>
+
+      {/* Slide-Out AI Security Assistant Drawer */}
+      <SecurityCopilotDrawer
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
+        results={results}
+        code={code}
+        goToNav={goToNav}
+      />
     </div>
   );
 }
