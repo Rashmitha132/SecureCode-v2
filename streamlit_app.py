@@ -127,7 +127,7 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* 1. Hide Streamlit Header, Footer, Toolbar, and Running Status */
+    /* 1. Hide Streamlit Header, Footer, Toolbar, Crown Badge, ViewerBadges, and Running Status */
     header, 
     footer, 
     #MainMenu, 
@@ -136,21 +136,32 @@ st.markdown("""
     [data-testid="collapsedControl"], 
     [data-testid="stToolbar"], 
     [data-testid="stDecoration"],
-    [data-testid="stStatusWidget"] {
+    [data-testid="stStatusWidget"],
+    [data-testid="stViewerBadge"],
+    [data-testid="manage-app-button"],
+    [data-testid="stConnectionStatus"],
+    .viewerBadge,
+    .stDeployButton,
+    .stActionButton,
+    div[class*="viewerBadge"],
+    div[class*="manage-app"] {
         display: none !important;
         visibility: hidden !important;
+        opacity: 0 !important;
         height: 0 !important;
         width: 0 !important;
+        pointer-events: none !important;
     }
 
     /* 2. Remove all outer page margins and scrollbars */
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main {
         margin: 0 !important;
         padding: 0 !important;
-        overflow: hidden !important;
-        width: 100vw !important;
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
+        width: 100% !important;
         height: 100vh !important;
-        max-width: 100vw !important;
+        max-width: 100% !important;
         max-height: 100vh !important;
         background: #08090f !important;
     }
@@ -161,18 +172,19 @@ st.markdown("""
     [data-testid="stVerticalBlock"] {
         padding: 0 !important;
         margin: 0 !important;
-        max-width: 100vw !important;
-        width: 100vw !important;
+        max-width: 100% !important;
+        width: 100% !important;
         height: 100vh !important;
         overflow: hidden !important;
     }
 
     div[data-testid="element-container"], 
     div.stCustomComponentV1 {
-        width: 100vw !important;
+        width: 100% !important;
         height: 100vh !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: hidden !important;
     }
 
     /* 3. Lock iframe and content fixed to all 4 edges of the viewport */
@@ -183,8 +195,8 @@ st.markdown("""
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 100% !important;
+        height: 100% !important;
         border: none !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -193,5 +205,5 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Mount the complete React application directly inside Streamlit
-components.html(get_inlined_react_html(), height=1000, scrolling=True)
+# Mount the complete React application directly inside Streamlit with zero outer iframe scrollbar
+components.html(get_inlined_react_html(), height=1000, scrolling=False)

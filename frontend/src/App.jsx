@@ -3300,7 +3300,7 @@ export default function App() {
 
   if (activeNav === 'Landing Page') {
     return (
-      <div className={`landing-fullscreen-wrap ${theme === 'light' ? 'theme-light' : ''}`} style={{ width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg)' }}>
+      <div className={`landing-fullscreen-wrap ${theme === 'light' ? 'theme-light' : ''}`} style={{ width: '100%', maxWidth: '100%', height: '100vh', overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg)' }}>
         <LandingPageView goToNav={goToNav} theme={theme} setTheme={setTheme} />
       </div>
     );
