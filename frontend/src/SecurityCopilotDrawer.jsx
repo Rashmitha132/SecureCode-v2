@@ -219,14 +219,18 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
-    // 2. Identity & Purpose ("who are you", "who r u", "hello", "hi")
-    const isIdentity =
-      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(qLower) ||
-      qLower === 'hi' || qLower === 'hello' || qLower === 'hey' || qLower === 'who r u' || qLower === 'who are you';
+    // 2. Identity, Help & Capabilities ("who are you", "how can you help me", "how can u help", "what can you do", "hello", "hi")
+    const isIdentityOrHelp =
+      /\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(qLower) ||
+      qLower.includes('how can u help') ||
+      qLower.includes('how can you help') ||
+      qLower.includes('how do you help') ||
+      qLower.includes('how do u help') ||
+      qLower === 'hi' || qLower === 'hello' || qLower === 'hey' || qLower === 'who r u' || qLower === 'who are you' || qLower === 'help';
 
-    if (isIdentity) {
+    if (isIdentityOrHelp) {
       return {
-        answer: "👋 I am your **Project Security Auditor**.\n\nI am fine-tuned exclusively to audit your scanned code, explain the findings in your project, and provide secure patches tailored to your codebase.\n\n### 🛡️ How I Can Help You:\n* **Inspect Scanned Code:** Audit your project files for security flaws like SQL Injection, XSS, insecure eval, and exposed credentials.\n* **Explain Project Findings:** Break down detected vulnerabilities with severity metrics connected to official **OWASP Top 10** and **MITRE CWE** standards.\n* **Provide Remediation Patches:** Offer verified, copy-ready code fixes.\n\nAsk me to audit your active code or explain any vulnerability finding!",
+        answer: `👋 **Here is how I can assist you with your project & connected GitHub repositories:**\n\n### 🛡️ 1. Step-by-Step Vulnerability Remediation:\n* Provide **actionable, line-by-line steps on how to fix detected vulnerabilities** (such as SQL Injection, Cross-Site Scripting, exposed API keys/passwords, insecure eval, and command injection).\n* Deliver **verified, copy-ready code patches** and unified diffs directly tailored to your files.\n\n### 📂 2. Walk You Through Your Project & Connected GitHub Repos:\n* Walk you through **auditing your connected GitHub / GitLab repositories** to identify vulnerable modules and dependency risks across branches.\n* Help you review pull requests for security flaws before merging into production.\n\n### ⚡ 3. Guide You Through Security Workflows:\n* Explain scan findings in **Scan Results**, audit live snippets in **Code Scan**, and track security score improvements in **Learning Progress**.\n\n*Ask me: "How do I fix the findings?", "Audit my active code", or "Check for exposed credentials in my project!"*`,
       };
     }
 

@@ -457,16 +457,20 @@ I am fine-tuned exclusively to audit your scanned code, explain project findings
 
 I am fine-tuned exclusively to audit your project code, explain vulnerability findings, and provide security remediation patches for your codebase.
 
-*Please feel free to ask me about your scanned code, vulnerability findings, or how to fix issues in your project!*`};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do)\b/i.test(t)||t===`hi`||t===`hello`||t===`hey`||t===`who r u`||t===`who are you`)return{answer:`👋 I am your **Project Security Auditor**.
+*Please feel free to ask me about your scanned code, vulnerability findings, or how to fix issues in your project!*`};if(/\b(who\s*(are|r)\s*(you|u)|who\s*u\s*(are|r)|what\s*(are|r)\s*(you|u)|what\s*(is|are)\s*this|what\s*(can|do)\s*(you|u)\s*do|introduce\s*yourself|what\s*is\s*your\s*purpose|what\s*do\s*u\s*do|what\s*can\s*u\s*do|how\s*(can|do)\s*(you|u)\s*help|how\s*to\s*use|help\s*me|assist\s*me)\b/i.test(t)||t.includes(`how can u help`)||t.includes(`how can you help`)||t.includes(`how do you help`)||t.includes(`how do u help`)||t===`hi`||t===`hello`||t===`hey`||t===`who r u`||t===`who are you`||t===`help`)return{answer:`👋 **Here is how I can assist you with your project & connected GitHub repositories:**
 
-I am fine-tuned exclusively to audit your scanned code, explain the findings in your project, and provide secure patches tailored to your codebase.
+### 🛡️ 1. Step-by-Step Vulnerability Remediation:
+* Provide **actionable, line-by-line steps on how to fix detected vulnerabilities** (such as SQL Injection, Cross-Site Scripting, exposed API keys/passwords, insecure eval, and command injection).
+* Deliver **verified, copy-ready code patches** and unified diffs directly tailored to your files.
 
-### 🛡️ How I Can Help You:
-* **Inspect Scanned Code:** Audit your project files for security flaws like SQL Injection, XSS, insecure eval, and exposed credentials.
-* **Explain Project Findings:** Break down detected vulnerabilities with severity metrics connected to official **OWASP Top 10** and **MITRE CWE** standards.
-* **Provide Remediation Patches:** Offer verified, copy-ready code fixes.
+### 📂 2. Walk You Through Your Project & Connected GitHub Repos:
+* Walk you through **auditing your connected GitHub / GitLab repositories** to identify vulnerable modules and dependency risks across branches.
+* Help you review pull requests for security flaws before merging into production.
 
-Ask me to audit your active code or explain any vulnerability finding!`};if(/\b(generate|write|create|synthesize|build|give me|make|code me|script me)\b/i.test(t)&&/\b(code|python|javascript|java|c\+\+|html|css|sql|script|function|program|app|api|login|auth|calculator|count|loop|numbers|snippet)\b/i.test(t)||t.startsWith(`generate`)||t.startsWith(`write`)||t.startsWith(`create`)||t.includes(`generate code`)||t.includes(`write code`)||t.includes(`create code`)||t.includes(`can u generate`)||t.includes(`can you generate`)||t.includes(`help me to generate code`)||t.includes(`help me generate code`))return{answer:`💡 **I cannot help with generating code directly here.**
+### ⚡ 3. Guide You Through Security Workflows:
+* Explain scan findings in **Scan Results**, audit live snippets in **Code Scan**, and track security score improvements in **Learning Progress**.
+
+*Ask me: "How do I fix the findings?", "Audit my active code", or "Check for exposed credentials in my project!"*`};if(/\b(generate|write|create|synthesize|build|give me|make|code me|script me)\b/i.test(t)&&/\b(code|python|javascript|java|c\+\+|html|css|sql|script|function|program|app|api|login|auth|calculator|count|loop|numbers|snippet)\b/i.test(t)||t.startsWith(`generate`)||t.startsWith(`write`)||t.startsWith(`create`)||t.includes(`generate code`)||t.includes(`write code`)||t.includes(`create code`)||t.includes(`can u generate`)||t.includes(`can you generate`)||t.includes(`help me to generate code`)||t.includes(`help me generate code`))return{answer:`💡 **I cannot help with generating code directly here.**
 
 However, you can navigate to the **Generate Code** tab in the sidebar where you can generate code using our AI Code Synthesizer.
 
