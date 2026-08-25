@@ -71,7 +71,7 @@ PATTERNS = [
     {"name": "Generic Bearer Token", "regex": r"Bearer\s+[A-Za-z0-9\-._~+/]{20,}={0,2}", "severity": "Medium"},
     {"name": "Private Key Block", "regex": r"-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----", "severity": "High"},
     {"name": "JWT Token", "regex": r"eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9._-]{10,}\.[A-Za-z0-9._-]{10,}", "severity": "Medium"},
-    {"name": "Generic API Key Assignment", "regex": r"(api[_-]?key|apikey|secret|token|password|pwd)\s*[:=]\s*[\"']([A-Za-z0-9\-_!@#$%^&*]{12,})[\"']", "severity": "Medium"},
+    {"name": "Hardcoded Database Password / Secret", "regex": r"(password|passwd|pwd|db_pass|secret_key)\s*[:=]\s*[\"']([^\"'\r\n]{2,})[\"']", "severity": "High"},
 ]
 
 def shannon_entropy(token: str) -> float:
@@ -95,10 +95,63 @@ def scan_patterns(code: str) -> List[Dict[str, Any]]:
                 "line": line_no,
                 "matchPreview": masked,
                 "vulnerableCode": orig_line.strip(),
-                "correctedCode": orig_line.replace(matched_str, 'process.env.SECRET_KEY || os.environ.get("SECRET_KEY")').strip(),
+                "correctedCode": orig_line.replace(matched_str, 'password: process.env.DB_PASSWORD || process.env.SECRET_KEY').strip(),
                 "fix": f"Extract hardcoded {pat['name']} into environment variables or secrets manager.",
                 "method": "pattern"
             })
+
+    # OWASP Pattern Heuristics
+    for i, line in enumerate(lines, 1):
+        # SQL Injection Template / Concat
+        if re.search(r"`\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP)\b[\s\S]*?\$\{", line, re.IGNORECASE) or \
+           re.search(r"(`|[\"'])\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?WHERE[\s\S]*?\$\{", line, re.IGNORECASE):
+            findings.append({
+                "type": "SQL Injection (SQLi) — Template Literal Interpolation",
+                "severity": "Critical",
+                "line": i,
+                "matchPreview": "`SELECT ... ${...}`",
+                "vulnerableCode": line.strip(),
+                "correctedCode": 'const query = "SELECT * FROM users WHERE username = ?";',
+                "fix": "Use parameterized query placeholders (?) and pass arguments as an array: db.query(query, [username], ...)",
+                "method": "gnn"
+            })
+        elif re.search(r"(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)[\s\S]*?[\"']\s*\+\s*[a-zA-Z0-9_\.]+", line, re.IGNORECASE) or \
+             re.search(r"[a-zA-Z0-9_\.]+\s*\+\s*[\"'][\s\S]*?(SELECT|INSERT|UPDATE|DELETE)", line, re.IGNORECASE):
+            findings.append({
+                "type": "SQL Injection (SQLi) — Unsafe Concatenation",
+                "severity": "Critical",
+                "line": i,
+                "matchPreview": '"SELECT..." + var',
+                "vulnerableCode": line.strip(),
+                "correctedCode": 'cursor.execute("SELECT * FROM users WHERE username = %s", (username,))',
+                "fix": "Use parameterized queries or prepared statements instead of direct string concatenation.",
+                "method": "gnn"
+            })
+        elif re.search(r"f[\"']\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?\{", line, re.IGNORECASE):
+            findings.append({
+                "type": "SQL Injection (SQLi) — Python f-String Interpolation",
+                "severity": "Critical",
+                "line": i,
+                "matchPreview": 'f"SELECT...{var}"',
+                "vulnerableCode": line.strip(),
+                "correctedCode": 'cursor.execute("SELECT * FROM users WHERE username = %s", (username,))',
+                "fix": "Pass parameters as a tuple argument to cursor.execute() instead of embedding in f-strings.",
+                "method": "gnn"
+            })
+        
+        # Eval & Dynamic execution
+        if re.search(r"\beval\s*\(|new\s+Function\s*\(|\bexec\s*\(|setTimeout\s*\(\s*[\"']", line, re.IGNORECASE):
+            findings.append({
+                "type": "Dynamic Code Execution (Insecure Eval)",
+                "severity": "Critical",
+                "line": i,
+                "matchPreview": "eval(...)",
+                "vulnerableCode": line.strip(),
+                "correctedCode": "// Use safe parsing or dispatch maps instead of dynamic evaluation",
+                "fix": "Avoid dynamic execution of untrusted input strings.",
+                "method": "gnn"
+            })
+
     return findings
 
 def scan_entropy_secrets(code: str) -> List[Dict[str, Any]]:

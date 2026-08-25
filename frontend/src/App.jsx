@@ -2871,23 +2871,24 @@ export default function App() {
     }
   }
 
-  // Standalone Client-Side AI & Pattern Scanner for Cloud/Offline Resilience
+  // Standalone Client-Side Multi-Tier AI & Pattern Scanner for Cloud/Offline Resilience
   function runClientSideScan(codeToScan) {
     const findings = [];
     const lines = codeToScan.split('\n');
 
-    const patterns = [
-      { name: 'AWS Access Key ID', regex: /AKIA[0-9A-Z]{16}/g, severity: 'High' },
-      { name: 'Google API Key', regex: /AIza[0-9A-Za-z\-_]{35}/g, severity: 'High' },
-      { name: 'Slack Token', regex: /xox[baprs]-[0-9A-Za-z-]{10,72}/g, severity: 'High' },
-      { name: 'GitHub Personal Access Token', regex: /gh[pousr]_[A-Za-z0-9]{36,}/g, severity: 'High' },
-      { name: 'OpenAI API Key', regex: /sk-[A-Za-z0-9]{20,}/g, severity: 'High' },
-      { name: 'Private Key Block', regex: /-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----/g, severity: 'High' },
-      { name: 'JWT Token', regex: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9._-]{10,}\.[A-Za-z0-9._-]{10,}/g, severity: 'Medium' },
-      { name: 'Generic API Key Assignment', regex: /(api[_-]?key|apikey|secret|token|password|pwd)\s*[:=]\s*["']([A-Za-z0-9\-_!@#$%^&*]{12,})["']/gi, severity: 'Medium' }
+    // 1. Secrets & Credentials Patterns
+    const secretPatterns = [
+      { name: 'AWS Access Key ID', regex: /AKIA[0-9A-Z]{16}/g, severity: 'High', fix: 'Extract hardcoded AWS Access Key into environment variables.' },
+      { name: 'Google API Key', regex: /AIza[0-9A-Za-z\-_]{35}/g, severity: 'High', fix: 'Extract Google API Key into environment variables.' },
+      { name: 'Slack Token', regex: /xox[baprs]-[0-9A-Za-z-]{10,72}/g, severity: 'High', fix: 'Rotate and store Slack Token in a secrets vault.' },
+      { name: 'GitHub Personal Access Token', regex: /gh[pousr]_[A-Za-z0-9]{36,}/g, severity: 'High', fix: 'Revoke and store GitHub Token in environment variables.' },
+      { name: 'OpenAI API Key', regex: /sk-[A-Za-z0-9]{20,}/g, severity: 'High', fix: 'Move OpenAI Key to process.env.OPENAI_API_KEY.' },
+      { name: 'Private Key Block', regex: /-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----/g, severity: 'High', fix: 'Store private keys in a secure key management system (KMS).' },
+      { name: 'JWT Token', regex: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9._-]{10,}\.[A-Za-z0-9._-]{10,}/g, severity: 'Medium', fix: 'Ensure JWT tokens are not committed directly to source control.' },
+      { name: 'Hardcoded Database Password / Secret', regex: /(password|passwd|pwd|db_pass|secret_key)\s*[:=]\s*["']([^"'\r\n]{2,})["']/gi, severity: 'High', fix: 'Extract database password into environment variable (e.g. process.env.DB_PASSWORD).' }
     ];
 
-    for (const p of patterns) {
+    for (const p of secretPatterns) {
       for (const m of codeToScan.matchAll(p.regex)) {
         const lineNo = codeToScan.slice(0, m.index).split('\n').length;
         const origLine = lines[lineNo - 1] || m[0];
@@ -2895,54 +2896,132 @@ export default function App() {
           type: p.name,
           severity: p.severity,
           line: lineNo,
-          matchPreview: m[0].slice(0, 4) + '****' + m[0].slice(-4),
+          matchPreview: m[0].length > 10 ? m[0].slice(0, 4) + '****' + m[0].slice(-4) : '********',
           vulnerableCode: origLine.trim(),
-          correctedCode: origLine.replace(m[0], 'process.env.SECRET_KEY || os.environ.get("SECRET_KEY")').trim(),
-          fix: `Extract hardcoded ${p.name} into environment variables or secrets manager.`,
+          correctedCode: origLine.replace(m[0], 'password: process.env.DB_PASSWORD || process.env.SECRET_KEY').trim(),
+          fix: p.fix,
           method: 'pattern'
         });
       }
     }
 
-    if (/(SELECT|INSERT|UPDATE|DELETE).*\+.*|\$\{.+\}.*FROM/i.test(codeToScan) || /query\s*=.*\+.*username/i.test(codeToScan)) {
-      findings.push({
-        type: 'SQL Injection (SQLi)',
-        severity: 'Critical',
-        line: 1,
-        vulnerableCode: lines.find(l => /SELECT|query/i.test(l)) || 'query = "SELECT * FROM users WHERE user = " + username',
-        correctedCode: 'cursor.execute("SELECT * FROM users WHERE user = %s", (username,))',
-        fix: 'Use parameterized queries or prepared statements instead of string concatenation.',
-        method: 'gnn'
-      });
+    // 2. SQL Injection (SQLi) (CWE-89) — Detect template literals, string concatenations, and f-strings
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineNo = i + 1;
+
+      // JS Template Literal SQL: `SELECT ... ${...}` or `INSERT ... ${...}`
+      if (/`\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b[\s\S]*?\$\{/i.test(line) ||
+          /(`|["'])\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?WHERE[\s\S]*?\$\{/i.test(line)) {
+        findings.push({
+          type: 'SQL Injection (SQLi) — Template Literal Interpolation',
+          severity: 'Critical',
+          line: lineNo,
+          matchPreview: '`SELECT ... ${...}`',
+          vulnerableCode: line.trim(),
+          correctedCode: line.replace(/`[\s\S]*?WHERE[\s\S]*?`/i, '"SELECT * FROM users WHERE username = ?"').trim(),
+          fix: 'Use parameterized query placeholders (?) and pass arguments as an array: db.query(query, [username], ...)',
+          method: 'gnn'
+        });
+      }
+      // String Concatenation SQL: "SELECT ... " + var or query += ...
+      else if (/(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)[\s\S]*?["']\s*\+\s*[a-zA-Z0-9_\.]+/i.test(line) ||
+               /[a-zA-Z0-9_\.]+\s*\+\s*["'][\s\S]*?(SELECT|INSERT|UPDATE|DELETE)/i.test(line) ||
+               /query\s*=.*\+.*username/i.test(line)) {
+        findings.push({
+          type: 'SQL Injection (SQLi) — Unsafe Concatenation',
+          severity: 'Critical',
+          line: lineNo,
+          matchPreview: '"SELECT..." + var',
+          vulnerableCode: line.trim(),
+          correctedCode: 'cursor.execute("SELECT * FROM users WHERE user = %s", (username,))',
+          fix: 'Use parameterized queries or prepared statements instead of direct string concatenation.',
+          method: 'gnn'
+        });
+      }
+      // Python f-string SQL
+      else if (/f["']\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?\{/i.test(line)) {
+        findings.push({
+          type: 'SQL Injection (SQLi) — Python f-String Interpolation',
+          severity: 'Critical',
+          line: lineNo,
+          matchPreview: 'f"SELECT...{var}"',
+          vulnerableCode: line.trim(),
+          correctedCode: 'cursor.execute("SELECT * FROM users WHERE username = %s", (username,))',
+          fix: 'Pass parameters as a tuple argument to cursor.execute() instead of embedding in f-strings.',
+          method: 'gnn'
+        });
+      }
+
+      // 3. Dynamic Code Execution & Insecure Eval (CWE-94 / CWE-95)
+      if (/\beval\s*\(|new\s+Function\s*\(|\bexec\s*\(|setTimeout\s*\(\s*["']/i.test(line)) {
+        findings.push({
+          type: 'Dynamic Code Execution (Insecure Eval / Function)',
+          severity: 'Critical',
+          line: lineNo,
+          matchPreview: 'eval(...)',
+          vulnerableCode: line.trim(),
+          correctedCode: '// Use safe parsing or dispatch maps instead of dynamic evaluation',
+          fix: 'Avoid dynamic execution of untrusted input strings.',
+          method: 'gnn'
+        });
+      }
+
+      // 4. Command Injection / Subprocess execution (CWE-78)
+      if (/child_process\.exec\s*\(|os\.system\s*\(|subprocess\.Popen\s*\(.*shell\s*=\s*True/i.test(line)) {
+        findings.push({
+          type: 'Command Injection (Unsafe OS Command Execution)',
+          severity: 'High',
+          line: lineNo,
+          matchPreview: 'exec(...) / os.system(...)',
+          vulnerableCode: line.trim(),
+          correctedCode: 'execFile(cmd, argsArray, callback)',
+          fix: 'Use execFile or subprocess.run with argument arrays and shell=False.',
+          method: 'pattern'
+        });
+      }
+
+      // 5. Cross-Site Scripting (XSS) (CWE-79)
+      if (/dangerouslySetInnerHTML|innerHTML\s*=|document\.write\s*\(|res\.send\s*\(.*<[a-z]+/i.test(line)) {
+        findings.push({
+          type: 'Cross-Site Scripting (XSS)',
+          severity: 'High',
+          line: lineNo,
+          matchPreview: 'innerHTML / unescaped HTML',
+          vulnerableCode: line.trim(),
+          correctedCode: 'DOMPurify.sanitize(userInput)',
+          fix: 'Sanitize untrusted markup before rendering to the DOM using DOMPurify.',
+          method: 'pattern'
+        });
+      }
     }
 
-    if (/\beval\s*\(|new\s+Function\s*\(|exec\s*\(/i.test(codeToScan)) {
-      findings.push({
-        type: 'Dynamic Code Execution (Insecure Eval)',
-        severity: 'Critical',
-        line: 1,
-        vulnerableCode: lines.find(l => /eval|exec/i.test(l)) || 'eval(userInput)',
-        correctedCode: '// Use safe parsing or dispatch maps instead of direct code execution',
-        fix: 'Avoid dynamic execution of untrusted input strings.',
-        method: 'gnn'
-      });
+    // Deduplicate findings by line & type
+    const uniqueFindings = [];
+    const seenKeys = new Set();
+    for (const f of findings) {
+      const k = `${f.line}_${f.type}`;
+      if (!seenKeys.has(k)) {
+        seenKeys.add(k);
+        uniqueFindings.push(f);
+      }
     }
 
-    const highC = findings.filter(f => ['high', 'critical'].includes(String(f.severity).toLowerCase())).length;
-    const medC = findings.filter(f => String(f.severity).toLowerCase() === 'medium').length;
-    const lowC = findings.filter(f => String(f.severity).toLowerCase() === 'low').length;
-    const riskScore = Math.max(0, 100 - (highC * 25 + medC * 10 + lowC * 5));
-    const riskLevel = riskScore < 40 ? 'Critical' : riskScore < 60 ? 'High' : riskScore < 80 ? 'Medium' : 'Low';
+    const highC = uniqueFindings.filter(f => ['high', 'critical'].includes(String(f.severity).toLowerCase())).length;
+    const medC = uniqueFindings.filter(f => String(f.severity).toLowerCase() === 'medium').length;
+    const lowC = uniqueFindings.filter(f => String(f.severity).toLowerCase() === 'low').length;
+    const riskScore = Math.max(0, 100 - (highC * 30 + medC * 15 + lowC * 5));
+    const riskLevel = riskScore < 40 ? 'Critical' : riskScore < 65 ? 'High' : riskScore < 85 ? 'Medium' : 'Low';
 
     return {
       source: 'single-input',
-      totalFindings: findings.length,
+      totalFindings: uniqueFindings.length,
       highSeverity: highC,
       mediumSeverity: medC,
       lowSeverity: lowC,
       riskScore,
       riskLevel,
-      findings
+      findings: uniqueFindings
     };
   }
 

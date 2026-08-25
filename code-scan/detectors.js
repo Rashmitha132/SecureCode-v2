@@ -15,18 +15,20 @@ const PATTERNS = [
   { name: "Generic Bearer Token", regex: /Bearer\s+[A-Za-z0-9\-._~+/]{20,}=*/g, severity: "Medium" },
   { name: "Private Key Block", regex: /-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----/g, severity: "High" },
   { name: "JWT Token", regex: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9._-]{10,}\.[A-Za-z0-9._-]{10,}/g, severity: "Medium" },
-  { name: "Generic API Key Assignment", regex: /(api[_-]?key|apikey|secret|token|password|pwd)\s*[:=]\s*["']([A-Za-z0-9\-_!@#$%^&*]{12,})["']/gi, severity: "Medium" },
+  { name: "Hardcoded Database Password / Secret", regex: /(password|passwd|pwd|db_pass|secret_key)\s*[:=]\s*["']([^"'\r\n]{2,})["']/gi, severity: "High" },
 ];
 
 function scanPatterns(code) {
   const findings = [];
   const lines = code.split("\n");
+
+  // 1. Static Secret Patterns
   for (const p of PATTERNS) {
     const matches = [...code.matchAll(p.regex)];
     for (const m of matches) {
       const lineNumber = code.slice(0, m.index).split("\n").length;
       const originalLine = lines[lineNumber - 1] || m[0];
-      const safeLine = originalLine.replace(m[0], 'process.env.SECRET_KEY || os.environ.get("SECRET_KEY")');
+      const safeLine = originalLine.replace(m[0], 'password: process.env.DB_PASSWORD || process.env.SECRET_KEY');
 
       findings.push({
         type: p.name,
@@ -40,6 +42,79 @@ function scanPatterns(code) {
       });
     }
   }
+
+  // 2. OWASP Vulnerability Heuristics
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNo = i + 1;
+
+    // SQL Injection in template strings or string concats
+    if (/`\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP)\b[\s\S]*?\$\{/i.test(line) ||
+        /(`|["'])\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?WHERE[\s\S]*?\$\{/i.test(line)) {
+      findings.push({
+        type: "SQL Injection (SQLi) — Template Literal Interpolation",
+        severity: "Critical",
+        line: lineNo,
+        matchPreview: "`SELECT ... ${...}`",
+        vulnerableCode: line.trim(),
+        correctedCode: 'const query = "SELECT * FROM users WHERE username = ?"; // Use parameterized placeholders',
+        fix: "Use parameterized query placeholders (?) and pass arguments as an array: db.query(query, [username], ...)",
+        method: "gnn",
+      });
+    } else if (/(SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)[\s\S]*?["']\s*\+\s*[a-zA-Z0-9_\.]+/i.test(line) ||
+               /[a-zA-Z0-9_\.]+\s*\+\s*["'][\s\S]*?(SELECT|INSERT|UPDATE|DELETE)/i.test(line)) {
+      findings.push({
+        type: "SQL Injection (SQLi) — Unsafe Concatenation",
+        severity: "Critical",
+        line: lineNo,
+        matchPreview: '"SELECT..." + var',
+        vulnerableCode: line.trim(),
+        correctedCode: 'cursor.execute("SELECT * FROM users WHERE username = %s", (username,))',
+        fix: "Use parameterized queries or prepared statements instead of direct string concatenation.",
+        method: "gnn",
+      });
+    } else if (/f["']\s*(SELECT|INSERT|UPDATE|DELETE)[\s\S]*?\{/i.test(line)) {
+      findings.push({
+        type: "SQL Injection (SQLi) — Python f-String Interpolation",
+        severity: "Critical",
+        line: lineNo,
+        matchPreview: 'f"SELECT...{var}"',
+        vulnerableCode: line.trim(),
+        correctedCode: 'cursor.execute("SELECT * FROM users WHERE username = %s", (username,))',
+        fix: "Pass parameters as a tuple argument to cursor.execute() instead of embedding in f-strings.",
+        method: "gnn",
+      });
+    }
+
+    // Dynamic Eval Execution
+    if (/\beval\s*\(|new\s+Function\s*\(|\bexec\s*\(|setTimeout\s*\(\s*["']/i.test(line)) {
+      findings.push({
+        type: "Dynamic Code Execution (Insecure Eval)",
+        severity: "Critical",
+        line: lineNo,
+        matchPreview: "eval(...)",
+        vulnerableCode: line.trim(),
+        correctedCode: "// Use safe parsing or dispatch maps instead of dynamic evaluation",
+        fix: "Avoid dynamic execution of untrusted input strings.",
+        method: "gnn",
+      });
+    }
+
+    // XSS
+    if (/dangerouslySetInnerHTML|innerHTML\s*=|document\.write\s*\(|res\.send\s*\(.*<[a-z]+/i.test(line)) {
+      findings.push({
+        type: "Cross-Site Scripting (XSS)",
+        severity: "High",
+        line: lineNo,
+        matchPreview: "innerHTML / unescaped HTML",
+        vulnerableCode: line.trim(),
+        correctedCode: "DOMPurify.sanitize(userInput)",
+        fix: "Sanitize untrusted markup before rendering to the DOM using DOMPurify.",
+        method: "pattern",
+      });
+    }
+  }
+
   return findings;
 }
 
