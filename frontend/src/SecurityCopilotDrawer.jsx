@@ -388,8 +388,63 @@ export default function SecurityCopilotDrawer({
       };
     }
 
-    // 7. Scan History & Project Metrics Inquiry
-    if (qLower.includes('history') || qLower.includes('past scan') || qLower.includes('previous scan') || qLower.includes('total scan') || activeNav === 'Scan History') {
+    // 7. Recent Scan Details Inquiry ("which was my recent scan", "what was my last scan", "recent scan", "latest scan")
+    const isRecentScanQuery =
+      /\b(recent\s*scan|last\s*scan|latest\s*scan|previous\s*scan)\b/i.test(qLower) ||
+      qLower.includes('which was my recent scan') ||
+      qLower.includes('what was my recent scan') ||
+      qLower.includes('what was my last scan') ||
+      qLower.includes('my recent scan') ||
+      qLower.includes('my last scan') ||
+      qLower.includes('tell me about my recent scan') ||
+      qLower.includes('details of my recent scan');
+
+    if (isRecentScanQuery) {
+      // Look for active scan or latest scan in effective history
+      const recent = (results && (results.findings || results.risk_score !== undefined))
+        ? results
+        : (effectiveHistory.length > 0 ? effectiveHistory[0] : null);
+
+      if (!recent) {
+        return {
+          answer: "📋 **No Scans Recorded Yet**\n\nYou haven't run any scans in this session yet. Head over to **Code Scan**, paste your code snippet or upload a file, and click **Scan Code** to run your first audit!",
+        };
+      }
+
+      const scanId = recent.id || recent.snippet_hash || (recent.scanned_at ? `Scan @ ${new Date(recent.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Latest Scan');
+      const scanFindings = recent.findings || [];
+      const count = recent.total_findings ?? scanFindings.length;
+      const score = Math.max(0, 100 - (recent.risk_score ?? recent.riskScore ?? 0));
+      const risk = recent.risk_level || recent.riskLevel || (score < 50 ? 'High' : score < 80 ? 'Medium' : 'Low');
+      const source = recent.source || 'Source Code';
+      const scanDate = recent.scanned_at || recent.scannedAt || recent.timestamp ? new Date(recent.scanned_at || recent.scannedAt || recent.timestamp).toLocaleString() : 'Recent';
+
+      let reply = `📊 **Details of Your Most Recent Scan:**\n\n`;
+      reply += `* **Scan ID / Reference:** \`#${scanId}\`\n`;
+      reply += `* **Source:** **${source}**\n`;
+      reply += `* **Security Score:** **${score}/100** (${risk} Risk)\n`;
+      reply += `* **Timestamp:** ${scanDate}\n\n`;
+
+      if (count > 0) {
+        reply += `### 🚨 Vulnerability Status: **${count} Issue${count > 1 ? 's' : ''} Detected**\n\n`;
+        scanFindings.forEach((f, idx) => {
+          reply += `${idx + 1}. **${f.type || 'Vulnerability'}** at Line ${f.line || 1} — *${f.severity || 'High'} Severity*\n`;
+          reply += `   * **Standard:** ${f.cwe || 'OWASP Top 10'}\n`;
+          reply += `   * **Fix Status:** ⚠️ **Pending Patch** (Auto-repair patch available)\n`;
+          reply += `   * **Fix Recommendation:** ${f.fix || 'Apply parameterization.'}\n\n`;
+        });
+        reply += `💡 **Next Step to Fix:** Navigate to the **Scan Results** tab and click **"⚡ Auto-Repair"** to apply the verified secure patch!`;
+      } else {
+        reply += `### ✨ Vulnerability Status: **Clean (0 Defects Found)**\n\n`;
+        reply += `* **Fix Status:** ✅ **Fully Secure / No Patches Needed**\n`;
+        reply += `* **Summary:** The code achieved a flawless **100/100 rating** with zero security vulnerabilities, secrets, or parameter flaws detected.`;
+      }
+
+      return { answer: reply };
+    }
+
+    // 8. Scan History & Project Metrics Inquiry
+    if (qLower.includes('history') || qLower.includes('past scan') || qLower.includes('total scan') || activeNav === 'Scan History') {
       if (totalScans > 0) {
         return {
           answer: `📊 **Project Scan History Overview (${totalScans} Scans Recorded):**\n\n* **Total Scans Recorded:** **${totalScans}**\n* **Average Security Score:** **${avgScore}/100**\n* **High / Critical Risk Scans:** **${highRiskCount}**\n\n${highRiskCount > 0 ? `⚠️ **Attention:** You have ${highRiskCount} scan(s) flagged with High or Critical risks. Click on any record in **Scan History** or go to **Scan Results** to review and auto-patch them!` : '✨ All recorded scans are in good standing!'}`,
