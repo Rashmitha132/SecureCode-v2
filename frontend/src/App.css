@@ -5288,9 +5288,10 @@ a { color: #7ec3f5; }
   width: 0 !important;
 }
 
-.copilot-drawer-pills-row {
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
+.copilot-drawer-pills-grid button:hover {
+  background: var(--panel-2) !important;
+  border-color: rgba(59, 167, 240, 0.4) !important;
+  color: var(--text) !important;
 }
 
 

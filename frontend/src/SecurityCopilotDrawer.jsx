@@ -23,7 +23,7 @@ const DRAWER_SUGGESTIONS = [
   },
   {
     icon: Lock,
-    label: 'How to Patch Vulnerabilities',
+    label: 'Patch Vulnerabilities',
     query: 'Show me the secure code fix for the most critical finding in my scanned project.',
   },
   {
@@ -743,16 +743,14 @@ export default function SecurityCopilotDrawer({
             gap: '8px',
           }}
         >
-          {/* Quick Suggestion Pills (Positioned at bottom, clean scroll without visible bar) */}
+          {/* Quick Suggestion Pills (Arranged in 2 neat lines, 100% visible) */}
           <div
-            className="copilot-drawer-pills-row"
+            className="copilot-drawer-pills-grid"
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '6px',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              paddingBottom: '2px',
+              width: '100%',
             }}
           >
             {DRAWER_SUGGESTIONS.map((s, idx) => {
@@ -762,24 +760,26 @@ export default function SecurityCopilotDrawer({
                   key={idx}
                   onClick={() => handleSend(s.query)}
                   style={{
-                    whiteSpace: 'nowrap',
                     background: 'var(--panel)',
                     border: '1px solid var(--border)',
                     color: 'var(--text-dim)',
-                    borderRadius: '9999px',
-                    padding: '5px 11px',
+                    borderRadius: '8px',
+                    padding: '6px 8px',
                     fontSize: '11px',
                     fontWeight: 500,
                     cursor: 'pointer',
-                    display: 'inline-flex',
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
-                    flexShrink: 0,
+                    justifyContent: 'center',
+                    gap: '5px',
+                    textAlign: 'center',
                     transition: 'all 0.15s ease',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <Icon size={12} style={{ color: '#3ba7f0' }} />
-                  <span>{s.label}</span>
+                  <Icon size={12} style={{ color: '#3ba7f0', flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
                 </button>
               );
             })}
