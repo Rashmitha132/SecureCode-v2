@@ -222,6 +222,29 @@ export default function SecurityCopilotDrawer({ isOpen, onClose, results, code, 
       };
     }
 
+    // 3. Code Generation Request Inquiry ("generate python code", "write code", "create code", "can you code", etc.)
+    const isGenCodeQuery =
+      (
+        /\b(generate|write|create|synthesize|build|give me|make|code me|script me)\b/i.test(qLower) &&
+        /\b(code|python|javascript|java|c\+\+|html|css|sql|script|function|program|app|api|login|auth|calculator|count|loop|numbers|snippet)\b/i.test(qLower)
+      ) ||
+      qLower.startsWith('generate') ||
+      qLower.startsWith('write') ||
+      qLower.startsWith('create') ||
+      qLower.includes('generate code') ||
+      qLower.includes('write code') ||
+      qLower.includes('create code') ||
+      qLower.includes('can u generate') ||
+      qLower.includes('can you generate') ||
+      qLower.includes('help me to generate code') ||
+      qLower.includes('help me generate code');
+
+    if (isGenCodeQuery) {
+      return {
+        answer: "💡 **I cannot help with generating code directly here.**\n\nHowever, you can navigate to the **Generate Code** tab in the sidebar where you can generate code using our AI Code Synthesizer.\n\nOnce generated, you can click **'Analyze in Code Scan'** to run the security audit, and then return here so I can **help you analyze that code and explain any vulnerability findings!**",
+      };
+    }
+
     // 3. Fix & Patch Request ("how to fix", "how to patch", "how do i fix", "remediate")
     if (
       /\b(how\s*(to|can\s*i|do\s*i)\s*(fix|patch|remediate|resolve|repair))\b/i.test(qLower) ||
